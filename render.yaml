@@ -5,21 +5,22 @@ services:
     rootDir: backend
     buildCommand: npm install
     startCommand: node server.js
+    plan: free
     envVars:
       - key: NODE_ENV
         value: production
       - key: SERVE_STATIC
         value: "false"
-      - key: PORT
-        fromParam: PORT
       - key: DATABASE_URL
         value: /opt/render/project/data/llm-nav.db
       - key: ADMIN_PASSWORD
         sync: false
       - key: JWT_SECRET
-        sync: false
+        generateValue: true
       - key: ALLOWED_ORIGINS
-        sync: false
+        value: https://dhapi.pages.dev
+      - key: PORT
+        value: "10000"
     disk:
       name: llm-nav-data
       mountPath: /opt/render/project/data
