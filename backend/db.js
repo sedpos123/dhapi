@@ -2,7 +2,11 @@ const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, '..', 'data', 'llm-nav.db');
+// 支持 DATABASE_URL（优先）和 DB_PATH 两种配置方式
+// DATABASE_URL 格式：file:./data/llm-nav.db 或绝对路径 /opt/render/project/data/llm-nav.db
+const DB_PATH = process.env.DATABASE_URL
+  ? process.env.DATABASE_URL.replace(/^file:/, '')
+  : (process.env.DB_PATH || path.join(__dirname, '..', 'data', 'llm-nav.db'));
 
 const dir = path.dirname(DB_PATH);
 if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });

@@ -4,8 +4,8 @@
   "description": "大模型 API 中转商家导航站",
   "private": true,
   "scripts": {
-    "start": "node server/index.js",
-    "dev": "nodemon server/index.js"
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js"
   },
   "dependencies": {
     "better-sqlite3": "^11.7.0",

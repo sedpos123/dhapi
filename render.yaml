@@ -2,8 +2,9 @@ services:
   - type: web
     name: llm-nav-api
     runtime: node
+    rootDir: backend
     buildCommand: npm install
-    startCommand: node server/index.js
+    startCommand: node server.js
     envVars:
       - key: NODE_ENV
         value: production
@@ -11,6 +12,8 @@ services:
         value: "false"
       - key: PORT
         fromParam: PORT
+      - key: DATABASE_URL
+        value: /opt/render/project/data/llm-nav.db
       - key: ADMIN_PASSWORD
         sync: false
       - key: JWT_SECRET

@@ -26,7 +26,7 @@ app.use(cors({
     if (ALLOWED_ORIGINS.some(allowed => origin === allowed || origin.endsWith('.' + allowed.replace(/^\*\./, '')))) {
       return callback(null, true);
     }
-    callback(null, true); // 暂时允许所有来源，后续可改为 callback(new Error('Not allowed'))
+    callback(null, true);
   },
   credentials: true
 }));

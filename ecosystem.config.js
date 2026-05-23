@@ -1,7 +1,7 @@
 module.exports = {
   apps: [{
     name: 'llm-nav',
-    script: 'server/index.js',
+    script: 'backend/server.js',
     cwd: __dirname,
     instances: 1,
     autorestart: true,
