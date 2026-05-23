@@ -1,3 +1,4 @@
-// Auto-generated — API 后端地址
-// 本地开发时保持为空字符串（同源），部署时由 build-frontend.sh 注入
-window.API_BASE = 'https://llm-nav-api.onrender.com';
+// API 后端地址配置
+// Cloudflare Pages + Functions 同域部署，API_BASE 为空
+// 本地开发时也保持为空（Express 同源服务）
+window.API_BASE = window.API_BASE || '';

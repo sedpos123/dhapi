@@ -1,0 +1,12 @@
+name = "dhapi"
+compatibility_date = "2024-12-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "llm-nav-db"
+database_id = "f3c4458e-51db-42cb-a222-acc6358bcb58"
+
+[vars]
+ADMIN_PASSWORD = "dhapi2024admin"
+JWT_SECRET = "dhapi-jwt-secret-prod-2024x"
+JWT_EXPIRES_IN = "24h"
