@@ -279,4 +279,4 @@ app.post('/admin/reset', async (c) => {
   return c.json({ success: true });
 });
 
-export const onRequest = app.fetch;
+export const onRequest = (context) => app.fetch(context.request, context.env, context);
