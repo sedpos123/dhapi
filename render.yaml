@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: llm-nav-api
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SERVE_STATIC
+        value: "false"
+      - key: PORT
+        fromParam: PORT
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+    disk:
+      name: llm-nav-data
+      mountPath: /opt/render/project/data
+      sizeGB: 1

@@ -1,0 +1,961 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>管理后台 — 中转导航</title>
+<style>
+:root {
+  --bg:      oklch(97% 0.012 80);
+  --surface: oklch(99% 0.005 80);
+  --fg:      oklch(20% 0.02 60);
+  --muted:   oklch(48% 0.015 60);
+  --border:  oklch(89% 0.012 80);
+  --accent:  oklch(58% 0.16 35);
+  --success: oklch(62% 0.17 145);
+  --warn:    oklch(75% 0.16 85);
+  --danger:  oklch(55% 0.2 25);
+  --font-display: 'Iowan Old Style', 'Charter', Georgia, serif;
+  --font-body:    -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono:    ui-monospace, 'JetBrains Mono', Menlo, monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); line-height: 1.5; min-height: 100vh; }
+
+/* === ADMIN LAYOUT === */
+.admin-app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+@media (max-width: 860px) {
+  .admin-app { grid-template-columns: 1fr; }
+  .admin-sidebar { display: none; }
+  .mobile-tab-bar { display: flex !important; }
+}
+
+/* === SIDEBAR === */
+.admin-sidebar {
+  background: var(--surface); border-inline-end: 1px solid var(--border);
+  padding: 20px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto;
+}
+.sidebar-brand {
+  padding: 0 20px 16px; border-bottom: 1px solid var(--border);
+  font-family: var(--font-display); font-size: 18px; font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.sidebar-brand span { color: var(--accent); }
+.sidebar-brand small { display: block; font-family: var(--font-mono); font-size: 10px; color: var(--muted); font-weight: 400; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 2px; }
+.nav-tabs { padding: 12px 0; }
+.nav-tab {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 20px; font-size: 13px; cursor: pointer;
+  color: var(--muted); transition: all .15s; user-select: none;
+  border-inline-start: 3px solid transparent;
+}
+.nav-tab:hover { color: var(--fg); background: oklch(96% 0.01 80); }
+.nav-tab.active { color: var(--accent); border-inline-start-color: var(--accent); background: oklch(95% 0.03 35 / 0.15); font-weight: 500; }
+.nav-tab .tab-icon { font-size: 16px; width: 20px; text-align: center; }
+.nav-tab .tab-badge {
+  margin-inline-start: auto; background: var(--danger); color: var(--surface);
+  font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 10px;
+  font-family: var(--font-mono);
+}
+.sidebar-footer { padding: 16px 20px; margin-top: auto; border-top: 1px solid var(--border); }
+.btn-logout {
+  width: 100%; padding: 8px; background: none; border: 1px solid var(--border);
+  border-radius: 6px; color: var(--muted); font-size: 12px; cursor: pointer;
+  font-family: var(--font-body); transition: all .15s;
+}
+.btn-logout:hover { border-color: var(--danger); color: var(--danger); }
+
+/* === MOBILE TAB BAR === */
+.mobile-tab-bar {
+  display: none; position: sticky; top: 0; z-index: 50;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 0 8px; overflow-x: auto; gap: 0;
+}
+.mobile-tab-bar button {
+  padding: 10px 14px; font-size: 12px; border: none; background: none;
+  color: var(--muted); cursor: pointer; white-space: nowrap;
+  font-family: var(--font-body); border-bottom: 2px solid transparent;
+  transition: all .15s;
+}
+.mobile-tab-bar button.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* === MAIN CONTENT === */
+.admin-main { padding: 28px 32px; max-width: 1100px; }
+@media (max-width: 860px) { .admin-main { padding: 20px 16px; } }
+
+.page-title {
+  font-family: var(--font-display); font-size: 24px; font-weight: 600;
+  letter-spacing: -0.02em; margin-bottom: 4px;
+}
+.page-desc { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+/* === STATS CARDS === */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px; margin-bottom: 28px;
+}
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px;
+}
+.stat-card .stat-val {
+  font-family: var(--font-display); font-size: 28px; font-weight: 600;
+  letter-spacing: -0.01em; display: block;
+}
+.stat-card .stat-label { font-size: 12px; color: var(--muted); margin-top: 2px; display: block; }
+.stat-card .stat-val.accent { color: var(--accent); }
+.stat-card .stat-val.success { color: var(--success); }
+.stat-card .stat-val.warn { color: var(--warn); }
+.stat-card .stat-val.danger { color: var(--danger); }
+
+/* === TABLE === */
+.data-table-wrap { overflow-x: auto; margin-bottom: 20px; }
+.data-table {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+}
+.data-table th {
+  font-family: var(--font-mono); font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--muted); font-weight: 500;
+  text-align: start; padding: 10px 12px; border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+.data-table td {
+  padding: 10px 12px; border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.data-table tr:hover td { background: oklch(96% 0.008 80); }
+.data-table .name-cell { font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.data-table .name-cell .mini-logo {
+  width: 28px; height: 28px; border-radius: 6px; display: flex;
+  align-items: center; justify-content: center; font-family: var(--font-display);
+  font-size: 13px; font-weight: 600; color: var(--surface); flex-shrink: 0;
+}
+.data-table .brand-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.data-table .brand-tags .tag { font-size: 10px; padding: 1px 6px; }
+.data-table .actions { display: flex; gap: 6px; }
+.status-pill {
+  display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px;
+  font-family: var(--font-mono); letter-spacing: 0.02em;
+}
+.status-pill.online { background: oklch(95% 0.05 145); color: var(--success); }
+.status-pill.offline { background: oklch(95% 0.03 25); color: var(--muted); }
+.status-pill.pending { background: oklch(95% 0.06 85); color: oklch(55% 0.15 65); }
+
+/* === BUTTONS === */
+.btn {
+  padding: 6px 14px; font-size: 12px; border: 1px solid var(--border);
+  border-radius: 6px; background: var(--surface); color: var(--muted);
+  cursor: pointer; font-family: var(--font-body); transition: all .15s;
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--fg); color: var(--fg); }
+.btn.primary { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+.btn.primary:hover { opacity: 0.88; }
+.btn.danger { border-color: var(--danger); color: var(--danger); }
+.btn.danger:hover { background: var(--danger); color: var(--surface); }
+.btn.sm { padding: 4px 10px; font-size: 11px; }
+.toolbar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.toolbar-row .spacer { margin-inline-start: auto; }
+
+/* === MODAL === */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: oklch(20% 0.02 60 / 0.4);
+  align-items: flex-start; justify-content: center;
+  padding: 32px 24px; overflow-y: auto;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface); border-radius: 12px;
+  max-width: 600px; width: 100%; border: 1px solid var(--border);
+  box-shadow: 0 8px 32px oklch(20% 0.02 60 / 0.12);
+}
+.modal-header {
+  padding: 20px 24px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+.modal-header h3 { font-family: var(--font-display); font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+.modal-close {
+  margin-inline-start: auto; width: 28px; height: 28px;
+  border: none; background: none; cursor: pointer;
+  font-size: 18px; color: var(--muted); border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-close:hover { background: oklch(95% 0.01 80); }
+.modal-body { padding: 20px 24px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+/* === FORM IN MODAL === */
+.field { margin-bottom: 16px; }
+.field:last-child { margin-bottom: 0; }
+.field label { display: block; font-size: 12px; font-weight: 500; margin-bottom: 4px; }
+.field label .req { color: var(--accent); }
+.field input, .field select, .field textarea {
+  width: 100%; padding: 8px 12px; font-size: 13px;
+  font-family: var(--font-body); color: var(--fg);
+  border: 1px solid var(--border); border-radius: 6px;
+  background: var(--bg); outline: none; transition: border-color .15s;
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+.field textarea { resize: vertical; min-height: 60px; }
+.field-inline { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 480px) { .field-inline { grid-template-columns: 1fr; } }
+.field .brand-checks { display: flex; flex-wrap: wrap; gap: 6px; }
+.field .brand-check {
+  font-size: 12px; padding: 4px 10px; border: 1px solid var(--border);
+  border-radius: 4px; cursor: pointer; user-select: none;
+  transition: all .15s; background: var(--surface);
+}
+.field .brand-check.selected { border-color: var(--accent); color: var(--accent); background: oklch(95% 0.04 35 / 0.15); }
+.field .feature-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.field .feature-chip {
+  font-size: 11px; padding: 3px 8px; border: 1px solid var(--border);
+  border-radius: 4px; background: oklch(97% 0.01 80);
+  display: flex; align-items: center; gap: 4px;
+}
+.field .feature-chip .remove { cursor: pointer; color: var(--muted); font-size: 13px; }
+.field .feature-chip .remove:hover { color: var(--danger); }
+
+/* === CONFIRM DIALOG === */
+.confirm-body { text-align: center; padding: 24px; }
+.confirm-body .confirm-icon { font-size: 40px; margin-bottom: 12px; }
+.confirm-body p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+.confirm-body strong { color: var(--fg); }
+
+/* === EMPTY STATE === */
+.empty-state { text-align: center; padding: 48px 24px; color: var(--muted); }
+.empty-state .empty-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.5; }
+.empty-state p { font-size: 14px; }
+
+/* === SETTINGS === */
+.settings-section { margin-bottom: 28px; }
+.settings-section h4 {
+  font-family: var(--font-mono); font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--muted); margin-bottom: 12px; font-weight: 500;
+}
+.settings-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.settings-row label { font-size: 13px; min-width: 100px; }
+.settings-row input { max-width: 240px; }
+
+/* === TAB CONTENT === */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* === TOAST === */
+.toast-container { position: fixed; top: 16px; inset-inline-end: 16px; z-index: 300; display: flex; flex-direction: column; gap: 8px; }
+.toast {
+  padding: 10px 16px; border-radius: 8px; font-size: 13px;
+  background: var(--surface); border: 1px solid var(--border);
+  box-shadow: 0 4px 16px oklch(20% 0.02 60 / 0.1);
+  animation: toastIn .2s ease;
+  max-width: 320px;
+}
+.toast.success { border-inline-start: 3px solid var(--success); }
+.toast.error { border-inline-start: 3px solid var(--danger); }
+@keyframes toastIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* === LOGIN SCREEN === */
+.login-screen {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 24px;
+}
+.login-box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 40px 32px; max-width: 380px; width: 100%;
+  box-shadow: 0 8px 32px oklch(20% 0.02 60 / 0.08);
+}
+.login-box h2 {
+  font-family: var(--font-display); font-size: 24px; font-weight: 600;
+  letter-spacing: -0.02em; margin-bottom: 24px; text-align: center;
+}
+.login-box .login-brand { text-align: center; margin-bottom: 20px; font-family: var(--font-display); font-size: 18px; color: var(--muted); }
+.login-box .login-brand span { color: var(--accent); }
+.login-error { color: var(--danger); font-size: 12px; margin-top: 8px; display: none; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-brand">中转<span>导航</span></div>
+    <h2>管理后台登录</h2>
+    <form id="loginForm">
+      <div class="field">
+        <label>管理密码</label>
+        <input type="password" id="loginPassword" placeholder="请输入管理密码" required />
+      </div>
+      <div class="login-error" id="loginError">密码错误，请重试</div>
+      <button type="submit" class="btn primary" style="width:100%;margin-top:12px;padding:10px;">登录</button>
+    </form>
+  </div>
+</div>
+
+<!-- ADMIN APP -->
+<div class="admin-app" id="adminApp" style="display:none;">
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">中转<span>导航</span><small>管理后台</small></div>
+    <nav class="nav-tabs" id="navTabs">
+      <div class="nav-tab active" data-tab="overview"><span class="tab-icon">◉</span> 概览</div>
+      <div class="nav-tab" data-tab="providers"><span class="tab-icon">▤</span> 商家管理</div>
+      <div class="nav-tab" data-tab="brands"><span class="tab-icon">◈</span> 品牌管理</div>
+      <div class="nav-tab" data-tab="categories"><span class="tab-icon">⊟</span> 分类管理</div>
+      <div class="nav-tab" data-tab="pending"><span class="tab-icon">⊡</span> 提交审核<span class="tab-badge" id="pendingBadge" style="display:none">0</span></div>
+      <div class="nav-tab" data-tab="data"><span class="tab-icon">⬍</span> 数据管理</div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn-logout" id="btnLogout" style="width:100%;">退出登录</button>
+      <a href="index.html" class="btn-logout" style="text-align:center;display:block;text-decoration:none;margin-top:8px;">返回首页</a>
+    </div>
+  </aside>
+
+  <!-- MOBILE TAB BAR -->
+  <div class="mobile-tab-bar" id="mobileTabBar">
+    <button class="active" data-tab="overview">概览</button>
+    <button data-tab="providers">商家</button>
+    <button data-tab="brands">品牌</button>
+    <button data-tab="categories">分类</button>
+    <button data-tab="pending">审核</button>
+    <button data-tab="data">数据</button>
+  </div>
+
+  <!-- MAIN -->
+  <main class="admin-main">
+    <!-- OVERVIEW -->
+    <div class="tab-content active" id="tab-overview">
+      <h2 class="page-title">概览</h2>
+      <p class="page-desc">站点运营数据一览</p>
+      <div class="stats-grid" id="overviewStats"></div>
+      <h3 style="font-family:var(--font-display);font-size:18px;margin-bottom:12px;">最近提交</h3>
+      <div id="recentPending"></div>
+    </div>
+
+    <!-- PROVIDERS -->
+    <div class="tab-content" id="tab-providers">
+      <h2 class="page-title">商家管理</h2>
+      <p class="page-desc">管理所有收录的商家信息</p>
+      <div class="toolbar-row">
+        <input class="form-input" type="text" id="providerSearch" placeholder="搜索商家…" style="max-width:240px;padding:6px 12px;font-size:12px;" />
+        <span class="spacer"></span>
+        <button class="btn primary" id="btnAddProvider">添加商家</button>
+      </div>
+      <div class="data-table-wrap">
+        <table class="data-table" id="providerTable">
+          <thead><tr><th>商家</th><th>品牌</th><th>分类</th><th>评分</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody id="providerTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- BRANDS -->
+    <div class="tab-content" id="tab-brands">
+      <h2 class="page-title">品牌管理</h2>
+      <p class="page-desc">维护模型品牌标签，首页筛选器和提交页将自动同步</p>
+      <div class="toolbar-row">
+        <input class="form-input" type="text" id="newBrandInput" placeholder="新品牌名称" style="max-width:200px;padding:6px 12px;font-size:12px;" />
+        <button class="btn primary" id="btnAddBrand">添加品牌</button>
+      </div>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>品牌名称</th><th>引用商家数</th><th>操作</th></tr></thead>
+          <tbody id="brandTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CATEGORIES -->
+    <div class="tab-content" id="tab-categories">
+      <h2 class="page-title">分类管理</h2>
+      <p class="page-desc">维护商家分类，首页和提交页将自动同步</p>
+      <div class="toolbar-row">
+        <input class="form-input" type="text" id="newCategoryInput" placeholder="新分类名称" style="max-width:200px;padding:6px 12px;font-size:12px;" />
+        <button class="btn primary" id="btnAddCategory">添加分类</button>
+      </div>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>分类名称</th><th>商家数</th><th>操作</th></tr></thead>
+          <tbody id="categoryTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PENDING -->
+    <div class="tab-content" id="tab-pending">
+      <h2 class="page-title">提交审核</h2>
+      <p class="page-desc">审核商家提交的入驻申请</p>
+      <div id="pendingList"></div>
+    </div>
+
+    <!-- DATA -->
+    <div class="tab-content" id="tab-data">
+      <h2 class="page-title">数据管理</h2>
+      <p class="page-desc">导入导出站点数据，重置为默认值</p>
+      <div class="settings-section">
+        <h4>导出数据</h4>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">将所有站点数据（商家、品牌、分类、待审核）导出为 JSON 文件</p>
+        <button class="btn primary" id="btnExport">导出 JSON</button>
+      </div>
+      <div class="settings-section">
+        <h4>导入数据</h4>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">从 JSON 文件导入数据，将覆盖当前所有数据</p>
+        <input type="file" id="importFile" accept=".json" hidden />
+        <button class="btn" id="btnImport">选择文件导入</button>
+      </div>
+      <div class="settings-section">
+        <h4>重置数据</h4>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">恢复为初始示例数据，所有修改将丢失</p>
+        <button class="btn danger" id="btnReset">重置为默认数据</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- PROVIDER EDIT MODAL -->
+<div class="modal-overlay" id="providerModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="providerModalTitle">编辑商家</h3>
+      <button class="modal-close" onclick="closeModal('providerModal')">&times;</button>
+    </div>
+    <div class="modal-body" id="providerModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('providerModal')">取消</button>
+      <button class="btn primary" id="btnSaveProvider">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-body">
+      <div class="confirm-body">
+        <div class="confirm-icon" id="confirmIcon">⚠</div>
+        <p id="confirmText"></p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('confirmModal')">取消</button>
+      <button class="btn danger" id="btnConfirmAction">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- BRAND EDIT MODAL -->
+<div class="modal-overlay" id="brandModal">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-header">
+      <h3 id="brandModalTitle">编辑品牌</h3>
+      <button class="modal-close" onclick="closeModal('brandModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>品牌名称<span class="req">*</span></label>
+        <input type="text" id="brandEditInput" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('brandModal')">取消</button>
+      <button class="btn primary" id="btnSaveBrand">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- CATEGORY EDIT MODAL -->
+<div class="modal-overlay" id="categoryModal">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-header">
+      <h3 id="categoryModalTitle">编辑分类</h3>
+      <button class="modal-close" onclick="closeModal('categoryModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>分类名称<span class="req">*</span></label>
+        <input type="text" id="categoryEditInput" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('categoryModal')">取消</button>
+      <button class="btn primary" id="btnSaveCategory">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="config.js"></script>
+<script>
+/* ========== CONFIG ========== */
+const API_BASE = window.API_BASE || '';
+
+/* ========== AUTH ========== */
+let authToken = sessionStorage.getItem('admin_token') || null;
+
+document.getElementById('loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const password = document.getElementById('loginPassword').value;
+  try {
+    const res = await fetch(API_BASE + '/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      authToken = data.token;
+      sessionStorage.setItem('admin_token', authToken);
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('adminApp').style.display = '';
+      refreshAll();
+    } else {
+      document.getElementById('loginError').style.display = 'block';
+      document.getElementById('loginPassword').value = '';
+    }
+  } catch {
+    document.getElementById('loginError').style.display = 'block';
+  }
+});
+
+document.getElementById('btnLogout').addEventListener('click', () => {
+  authToken = null;
+  sessionStorage.removeItem('admin_token');
+  document.getElementById('loginScreen').style.display = '';
+  document.getElementById('adminApp').style.display = 'none';
+});
+
+// Check auth on load
+if (authToken) {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminApp').style.display = '';
+}
+
+/* ========== API HELPER ========== */
+async function api(url, options = {}) {
+  const headers = { ...options.headers, 'Authorization': 'Bearer ' + authToken };
+  if (options.body && typeof options.body === 'object') {
+    headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify(options.body);
+  }
+  const res = await fetch(API_BASE + url, { ...options, headers });
+  if (res.status === 401) {
+    authToken = null;
+    sessionStorage.removeItem('admin_token');
+    document.getElementById('loginScreen').style.display = '';
+    document.getElementById('adminApp').style.display = 'none';
+    throw new Error('Unauthorized');
+  }
+  return res;
+}
+
+/* ========== TOAST ========== */
+function toast(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(() => el.remove(), 300); }, 2500);
+}
+
+/* ========== MODAL HELPERS ========== */
+function openModal(id) { document.getElementById(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
+document.querySelectorAll('.modal-overlay').forEach(el => { el.addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(el.id); }); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(el => closeModal(el.id)); });
+
+/* ========== TAB SWITCHING ========== */
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
+  document.querySelectorAll('.mobile-tab-bar button').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
+  refreshAll();
+}
+document.querySelectorAll('.nav-tab').forEach(el => el.addEventListener('click', () => switchTab(el.dataset.tab)));
+document.querySelectorAll('.mobile-tab-bar button').forEach(el => el.addEventListener('click', () => switchTab(el.dataset.tab)));
+
+/* ========== DATA CACHE ========== */
+let _providers = [], _brands = [], _categories = [], _pending = [];
+
+async function refreshAll() {
+  try {
+    const [pRes, bRes, cRes, pendRes] = await Promise.all([
+      api('/api/admin/providers').then(r => r.json()),
+      api('/api/admin/brands').then(r => r.json()),
+      api('/api/admin/categories').then(r => r.json()),
+      api('/api/admin/pending').then(r => r.json())
+    ]);
+    _providers = pRes.providers || [];
+    _brands = bRes.brands || [];
+    _categories = cRes.categories || [];
+    _pending = pendRes.pending || [];
+    renderOverview();
+    renderProviderTable();
+    renderBrandTable();
+    renderCategoryTable();
+    renderPendingList();
+    updatePendingBadge();
+  } catch (e) {
+    if (e.message !== 'Unauthorized') console.error('refreshAll error:', e);
+  }
+}
+
+function updatePendingBadge() {
+  const badge = document.getElementById('pendingBadge');
+  badge.textContent = _pending.length;
+  badge.style.display = _pending.length > 0 ? 'inline' : 'none';
+}
+
+/* ========== OVERVIEW ========== */
+function renderOverview() {
+  const online = _providers.filter(p => p.online).length;
+  const offline = _providers.length - online;
+  document.getElementById('overviewStats').innerHTML = `
+    <div class="stat-card"><span class="stat-val">${_providers.length}</span><span class="stat-label">总商家数</span></div>
+    <div class="stat-card"><span class="stat-val success">${online}</span><span class="stat-label">在线</span></div>
+    <div class="stat-card"><span class="stat-val warn">${offline}</span><span class="stat-label">下线</span></div>
+    <div class="stat-card"><span class="stat-val accent">${_brands.length}</span><span class="stat-label">品牌数</span></div>
+    <div class="stat-card"><span class="stat-val">${_categories.length}</span><span class="stat-label">分类数</span></div>
+    <div class="stat-card"><span class="stat-val danger">${_pending.length}</span><span class="stat-label">待审核</span></div>
+  `;
+  const el = document.getElementById('recentPending');
+  if (_pending.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>暂无待审核提交</p></div>';
+  } else {
+    el.innerHTML = '<div class="data-table-wrap"><table class="data-table"><thead><tr><th>商家名</th><th>分类</th><th>提交时间</th><th>操作</th></tr></thead><tbody>' +
+      _pending.slice(0, 5).map(p => `<tr><td>${p.name || '—'}</td><td>${p.category || '—'}</td><td>${p.submitted_at || '—'}</td><td><button class="btn sm primary" onclick="approvePending(${p.id})">批准</button> <button class="btn sm danger" onclick="rejectPending(${p.id})">拒绝</button></td></tr>`).join('') +
+      '</tbody></table></div>';
+  }
+}
+
+/* ========== PROVIDER TABLE ========== */
+let editingProviderId = null;
+let providerSearch = '';
+document.getElementById('providerSearch').addEventListener('input', e => { providerSearch = e.target.value.trim().toLowerCase(); renderProviderTable(); });
+
+function renderProviderTable() {
+  let list = [..._providers];
+  if (providerSearch) list = list.filter(p => p.name.toLowerCase().includes(providerSearch) || (p.brands || []).some(b => b.toLowerCase().includes(providerSearch)));
+
+  document.getElementById('providerTableBody').innerHTML = list.length === 0
+    ? '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px;">无匹配商家</td></tr>'
+    : list.map(p => `<tr>
+        <td><div class="name-cell"><div class="mini-logo" style="background:${p.color || '#888'}">${(p.name || '?')[0]}</div>${p.name}</div></td>
+        <td><div class="brand-tags">${(p.brands || []).slice(0, 3).map(b => `<span class="tag">${b}</span>`).join('')}${(p.brands || []).length > 3 ? `<span class="tag highlight">+${(p.brands || []).length-3}</span>` : ''}</div></td>
+        <td>${p.category || '—'}</td>
+        <td style="font-family:var(--font-mono);color:var(--accent);">${p.rating || '—'}</td>
+        <td><span class="status-pill ${p.online ? 'online' : 'offline'}">${p.online ? '在线' : '下线'}</span></td>
+        <td class="actions">
+          <button class="btn sm" onclick="editProvider('${p.id}')">编辑</button>
+          <button class="btn sm" onclick="toggleProviderOnline('${p.id}')">${p.online ? '下线' : '上线'}</button>
+          <button class="btn sm danger" onclick="deleteProvider('${p.id}')">删除</button>
+        </td>
+      </tr>`).join('');
+}
+
+document.getElementById('btnAddProvider').addEventListener('click', () => { editingProviderId = null; showProviderModal(null); });
+
+function editProvider(id) { editingProviderId = id; showProviderModal(_providers.find(p => p.id === id)); }
+
+function showProviderModal(p) {
+  const isNew = !p;
+  document.getElementById('providerModalTitle').textContent = isNew ? '添加商家' : '编辑商家';
+  const selBrands = isNew ? [] : (p.brands || []);
+  const selFeatures = isNew ? [] : (p.features || []);
+
+  document.getElementById('providerModalBody').innerHTML = `
+    <div class="field"><label>商家名称<span class="req">*</span></label><input type="text" id="pName" value="${isNew ? '' : esc(p.name)}" /></div>
+    <div class="field-inline">
+      <div class="field"><label>品牌色</label><input type="color" id="pColor" value="${isNew ? '#3B6F8C' : (p.color || '#3B6F8C')}" style="height:36px;padding:2px;" /></div>
+      <div class="field"><label>网站链接</label><input type="url" id="pUrl" value="${isNew ? '' : esc(p.url || '')}" /></div>
+    </div>
+    <div class="field-inline">
+      <div class="field"><label>分类<span class="req">*</span></label><select id="pCategory">${_categories.map(c => `<option value="${esc(c.name)}" ${!isNew && p.category === c.name ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>
+      <div class="field"><label>评分</label><input type="number" id="pRating" value="${isNew ? '4.0' : (p.rating || '4.0')}" step="0.1" min="0" max="5" /></div>
+    </div>
+    <div class="field"><label>简介<span class="req">*</span></label><textarea id="pDesc" rows="3">${isNew ? '' : esc(p.desc || '')}</textarea></div>
+    <div class="field"><label>支持品牌<span class="req">*</span></label>
+      <div class="brand-checks" id="pBrandChecks">${_brands.map(b => `<span class="brand-check ${selBrands.includes(b.name) ? 'selected' : ''}" data-brand="${esc(b.name)}">${esc(b.name)}</span>`).join('')}</div>
+    </div>
+    <div class="field"><label>核心特性</label>
+      <div style="display:flex;gap:6px;"><input type="text" id="pFeatureInput" placeholder="输入特性标签，回车添加" style="flex:1;" /><button class="btn sm" onclick="addProviderFeature()">添加</button></div>
+      <div class="feature-chips" id="pFeatureChips">${selFeatures.map((f, i) => `<span class="feature-chip">${esc(f)}<span class="remove" onclick="removeProviderFeature(${i})">×</span></span>`).join('')}</div>
+    </div>
+    <div class="field-inline">
+      <div class="field"><label>可用率</label><input type="text" id="pUptime" value="${isNew ? '99.5%' : (p.uptime || '—')}" /></div>
+      <div class="field"><label>首 token 延迟</label><input type="text" id="pSpeed" value="${isNew ? '1.0s' : (p.speed || '—')}" /></div>
+    </div>
+  `;
+  document.querySelectorAll('#pBrandChecks .brand-check').forEach(el => {
+    el.addEventListener('click', () => el.classList.toggle('selected'));
+  });
+  document.getElementById('pFeatureInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addProviderFeature(); } });
+  openModal('providerModal');
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+let _providerFeatures = [];
+function addProviderFeature() {
+  const input = document.getElementById('pFeatureInput');
+  const val = input.value.trim();
+  if (!val) return;
+  _providerFeatures = getCurrentProviderFeatures();
+  if (_providerFeatures.includes(val) || _providerFeatures.length >= 8) { input.value = ''; return; }
+  _providerFeatures.push(val);
+  input.value = '';
+  renderProviderFeatureChips();
+}
+function removeProviderFeature(idx) {
+  _providerFeatures = getCurrentProviderFeatures();
+  _providerFeatures.splice(idx, 1);
+  renderProviderFeatureChips();
+}
+function getCurrentProviderFeatures() {
+  return Array.from(document.querySelectorAll('#pFeatureChips .feature-chip')).map(el => el.childNodes[0].textContent);
+}
+function renderProviderFeatureChips() {
+  document.getElementById('pFeatureChips').innerHTML = _providerFeatures.map((f, i) => `<span class="feature-chip">${esc(f)}<span class="remove" onclick="removeProviderFeature(${i})">×</span></span>`).join('');
+}
+
+document.getElementById('btnSaveProvider').addEventListener('click', async () => {
+  const name = document.getElementById('pName').value.trim();
+  const category = document.getElementById('pCategory').value;
+  const desc = document.getElementById('pDesc').value.trim();
+  const selectedBrands = Array.from(document.querySelectorAll('#pBrandChecks .brand-check.selected')).map(el => el.dataset.brand);
+  const features = getCurrentProviderFeatures();
+
+  if (!name || !category || !desc) { toast('请填写必填项', 'error'); return; }
+  if (selectedBrands.length === 0) { toast('请至少选择一个品牌', 'error'); return; }
+
+  const body = {
+    name, color: document.getElementById('pColor').value,
+    category, desc, rating: parseFloat(document.getElementById('pRating').value) || 4.0,
+    brands: selectedBrands, features,
+    status: 'ok', uptime: document.getElementById('pUptime').value || '—',
+    speed: document.getElementById('pSpeed').value || '—',
+    url: document.getElementById('pUrl').value || '#', online: true
+  };
+
+  try {
+    if (editingProviderId) {
+      await api('/api/admin/providers/' + editingProviderId, { method: 'PUT', body });
+    } else {
+      await api('/api/admin/providers', { method: 'POST', body });
+    }
+    closeModal('providerModal');
+    toast(editingProviderId ? '商家已更新' : '商家已添加');
+    refreshAll();
+  } catch { toast('操作失败', 'error'); }
+});
+
+async function toggleProviderOnline(id) {
+  try {
+    await api('/api/admin/providers/' + id + '/toggle', { method: 'PATCH' });
+    toast('状态已切换');
+    refreshAll();
+  } catch { toast('操作失败', 'error'); }
+}
+
+function deleteProvider(id) {
+  const p = _providers.find(x => x.id === id);
+  showConfirm('删除商家', `确定要删除 <strong>${p ? p.name : id}</strong> 吗？此操作不可撤销。`, async () => {
+    try { await api('/api/admin/providers/' + id, { method: 'DELETE' }); toast('商家已删除'); refreshAll(); } catch { toast('操作失败', 'error'); }
+  });
+}
+
+/* ========== BRAND TABLE ========== */
+let editingBrandId = null;
+
+function renderBrandTable() {
+  document.getElementById('brandTableBody').innerHTML = _brands.map(b => {
+    const count = _providers.filter(p => (p.brands || []).includes(b.name)).length;
+    return `<tr><td style="font-weight:500;">${esc(b.name)}</td><td style="font-family:var(--font-mono);color:var(--muted);">${count}</td><td class="actions"><button class="btn sm" onclick="editBrand(${b.id})">编辑</button><button class="btn sm danger" onclick="deleteBrand(${b.id})">删除</button></td></tr>`;
+  }).join('');
+}
+
+document.getElementById('btnAddBrand').addEventListener('click', async () => {
+  const val = document.getElementById('newBrandInput').value.trim();
+  if (!val) return;
+  try {
+    const res = await api('/api/admin/brands', { method: 'POST', body: { name: val } });
+    if (res.ok) { document.getElementById('newBrandInput').value = ''; toast('品牌已添加'); refreshAll(); }
+    else { const e = await res.json(); toast(e.error || '添加失败', 'error'); }
+  } catch { toast('操作失败', 'error'); }
+});
+document.getElementById('newBrandInput').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('btnAddBrand').click(); });
+
+function editBrand(id) {
+  editingBrandId = id;
+  const b = _brands.find(x => x.id === id);
+  document.getElementById('brandModalTitle').textContent = '编辑品牌';
+  document.getElementById('brandEditInput').value = b ? b.name : '';
+  openModal('brandModal');
+}
+document.getElementById('btnSaveBrand').addEventListener('click', async () => {
+  const val = document.getElementById('brandEditInput').value.trim();
+  if (!val) { toast('品牌名不能为空', 'error'); return; }
+  try {
+    const res = await api('/api/admin/brands/' + editingBrandId, { method: 'PUT', body: { name: val } });
+    if (res.ok) { closeModal('brandModal'); toast('品牌已更新'); refreshAll(); }
+    else { const e = await res.json(); toast(e.error || '更新失败', 'error'); }
+  } catch { toast('操作失败', 'error'); }
+});
+
+function deleteBrand(id) {
+  const b = _brands.find(x => x.id === id);
+  const name = b ? b.name : '';
+  const refCount = _providers.filter(p => (p.brands || []).includes(name)).length;
+  const msg = refCount > 0
+    ? `品牌 <strong>${name}</strong> 被 ${refCount} 个商家引用，删除后这些商家的品牌标签也将移除。确定删除？`
+    : `确定要删除品牌 <strong>${name}</strong> 吗？`;
+  showConfirm('删除品牌', msg, async () => {
+    try { await api('/api/admin/brands/' + id, { method: 'DELETE' }); toast('品牌已删除'); refreshAll(); } catch { toast('操作失败', 'error'); }
+  });
+}
+
+/* ========== CATEGORY TABLE ========== */
+let editingCategoryId = null;
+
+function renderCategoryTable() {
+  document.getElementById('categoryTableBody').innerHTML = _categories.map(c => {
+    const count = _providers.filter(p => p.category === c.name).length;
+    return `<tr><td style="font-weight:500;">${esc(c.name)}</td><td style="font-family:var(--font-mono);color:var(--muted);">${count}</td><td class="actions"><button class="btn sm" onclick="editCategory(${c.id})">编辑</button><button class="btn sm danger" onclick="deleteCategory(${c.id})">删除</button></td></tr>`;
+  }).join('');
+}
+
+document.getElementById('btnAddCategory').addEventListener('click', async () => {
+  const val = document.getElementById('newCategoryInput').value.trim();
+  if (!val) return;
+  try {
+    const res = await api('/api/admin/categories', { method: 'POST', body: { name: val } });
+    if (res.ok) { document.getElementById('newCategoryInput').value = ''; toast('分类已添加'); refreshAll(); }
+    else { const e = await res.json(); toast(e.error || '添加失败', 'error'); }
+  } catch { toast('操作失败', 'error'); }
+});
+document.getElementById('newCategoryInput').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('btnAddCategory').click(); });
+
+function editCategory(id) {
+  editingCategoryId = id;
+  const c = _categories.find(x => x.id === id);
+  document.getElementById('categoryModalTitle').textContent = '编辑分类';
+  document.getElementById('categoryEditInput').value = c ? c.name : '';
+  openModal('categoryModal');
+}
+document.getElementById('btnSaveCategory').addEventListener('click', async () => {
+  const val = document.getElementById('categoryEditInput').value.trim();
+  if (!val) { toast('分类名不能为空', 'error'); return; }
+  try {
+    const res = await api('/api/admin/categories/' + editingCategoryId, { method: 'PUT', body: { name: val } });
+    if (res.ok) { closeModal('categoryModal'); toast('分类已更新'); refreshAll(); }
+    else { const e = await res.json(); toast(e.error || '更新失败', 'error'); }
+  } catch { toast('操作失败', 'error'); }
+});
+
+function deleteCategory(id) {
+  const c = _categories.find(x => x.id === id);
+  const name = c ? c.name : '';
+  const refCount = _providers.filter(p => p.category === name).length;
+  const msg = refCount > 0
+    ? `分类 <strong>${name}</strong> 被 ${refCount} 个商家引用，删除后这些商家的分类将变为空。确定删除？`
+    : `确定要删除分类 <strong>${name}</strong> 吗？`;
+  showConfirm('删除分类', msg, async () => {
+    try { await api('/api/admin/categories/' + id, { method: 'DELETE' }); toast('分类已删除'); refreshAll(); } catch { toast('操作失败', 'error'); }
+  });
+}
+
+/* ========== PENDING ========== */
+function renderPendingList() {
+  const el = document.getElementById('pendingList');
+  if (_pending.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>暂无待审核提交</p></div>';
+    return;
+  }
+  el.innerHTML = _pending.map(p => `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+        <span style="font-weight:600;font-size:15px;">${esc(p.name || '—')}</span>
+        <span class="status-pill pending">待审核</span>
+        <span style="margin-inline-start:auto;font-size:12px;color:var(--muted);">${p.submitted_at || ''}</span>
+      </div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">${esc(p.desc || '无简介')}</p>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">分类：${esc(p.category || '—')} | 品牌：${(p.brands || []).map(esc).join(', ') || '—'}</div>
+      ${p.url ? `<div style="font-size:12px;color:var(--muted);margin-bottom:4px;">链接：${esc(p.url)}</div>` : ''}
+      ${p.contact_email ? `<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">联系：${esc(p.contact_email)}${p.contact_wechat ? ' / 微信 ' + esc(p.contact_wechat) : ''}</div>` : ''}
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="btn sm primary" onclick="approvePending(${p.id})">批准收录</button>
+        <button class="btn sm danger" onclick="rejectPending(${p.id})">拒绝</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function approvePending(id) {
+  try { await api('/api/admin/pending/' + id + '/approve', { method: 'POST' }); toast('已批准收录'); refreshAll(); } catch { toast('操作失败', 'error'); }
+}
+
+function rejectPending(id) {
+  const p = _pending.find(x => x.id === id);
+  showConfirm('拒绝申请', `确定要拒绝 <strong>${p ? p.name : '该商家'}</strong> 的申请吗？`, async () => {
+    try { await api('/api/admin/pending/' + id + '/reject', { method: 'POST' }); toast('已拒绝'); refreshAll(); } catch { toast('操作失败', 'error'); }
+  });
+}
+
+/* ========== CONFIRM DIALOG ========== */
+let _confirmAction = null;
+function showConfirm(title, msg, onConfirm) {
+  document.getElementById('confirmIcon').textContent = '⚠';
+  document.getElementById('confirmText').innerHTML = msg;
+  _confirmAction = onConfirm;
+  openModal('confirmModal');
+}
+document.getElementById('btnConfirmAction').addEventListener('click', () => {
+  if (_confirmAction) _confirmAction();
+  closeModal('confirmModal');
+  _confirmAction = null;
+});
+
+/* ========== DATA MANAGEMENT ========== */
+document.getElementById('btnExport').addEventListener('click', async () => {
+  try {
+    const res = await api('/api/admin/export');
+    const data = await res.json();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'llm-nav-data-' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click();
+    toast('数据已导出');
+  } catch { toast('导出失败', 'error'); }
+});
+
+document.getElementById('btnImport').addEventListener('click', () => document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      await api('/api/admin/import', { method: 'POST', body: imported });
+      toast('数据已导入');
+      refreshAll();
+    } catch { toast('导入失败，JSON 格式错误', 'error'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+document.getElementById('btnReset').addEventListener('click', () => {
+  showConfirm('重置数据', '确定要恢复为默认数据吗？所有修改将丢失。', async () => {
+    try { await api('/api/admin/reset', { method: 'POST' }); toast('已重置为默认数据'); refreshAll(); } catch { toast('操作失败', 'error'); }
+  });
+});
+
+/* ========== INIT ========== */
+if (authToken) refreshAll();
+</script>
+</body>
+</html>
