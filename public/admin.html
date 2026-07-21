@@ -131,6 +131,22 @@ body { background: var(--bg); color: var(--fg); font-family: var(--font-body); l
   align-items: center; justify-content: center; font-family: var(--font-display);
   font-size: 13px; font-weight: 600; color: var(--surface); flex-shrink: 0;
 }
+.data-table .name-cell .mini-logo-img {
+  width: 28px; height: 28px; border-radius: 6px; object-fit: cover; flex-shrink: 0;
+}
+.logo-field { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.logo-field .logo-preview {
+  width: 64px; height: 64px; border-radius: 8px; border: 1px solid var(--border);
+  overflow: hidden; display: flex; align-items: center; justify-content: center;
+  background: oklch(97% 0.005 80); flex-shrink: 0; font-size: 24px; color: var(--muted);
+}
+.logo-field .logo-preview img { width: 100%; height: 100%; object-fit: cover; }
+.logo-field .logo-upload-btn {
+  padding: 6px 12px; font-size: 12px; border: 1px solid var(--border);
+  border-radius: 6px; background: var(--surface); color: var(--muted);
+  cursor: pointer; transition: all .15s;
+}
+.logo-field .logo-upload-btn:hover { border-color: var(--accent); color: var(--accent); }
 .data-table .brand-tags { display: flex; flex-wrap: wrap; gap: 4px; }
 .data-table .brand-tags .tag { font-size: 10px; padding: 1px 6px; }
 .data-table .actions { display: flex; gap: 6px; }
@@ -216,6 +232,11 @@ body { background: var(--bg); color: var(--fg); font-family: var(--font-body); l
 }
 .field .feature-chip .remove { cursor: pointer; color: var(--muted); font-size: 13px; }
 .field .feature-chip .remove:hover { color: var(--danger); }
+.price-plan { border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 10px; background: var(--bg); }
+.price-plan .pp-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.price-plan .pp-head { display: flex; align-items: center; margin-bottom: 8px; }
+.price-plan .pp-head .pp-title { font-size: 12px; font-weight: 600; }
+.price-plan .pp-head .btn.sm { margin-inline-start: auto; }
 
 /* === CONFIRM DIALOG === */
 .confirm-body { text-align: center; padding: 24px; }
@@ -303,6 +324,8 @@ body { background: var(--bg); color: var(--fg); font-family: var(--font-body); l
       <div class="nav-tab" data-tab="brands"><span class="tab-icon">◈</span> 品牌管理</div>
       <div class="nav-tab" data-tab="categories"><span class="tab-icon">⊟</span> 分类管理</div>
       <div class="nav-tab" data-tab="pending"><span class="tab-icon">⊡</span> 提交审核<span class="tab-badge" id="pendingBadge" style="display:none">0</span></div>
+      <div class="nav-tab" data-tab="reviews"><span class="tab-icon">★</span> 评价审核<span class="tab-badge" id="reviewBadge" style="display:none">0</span></div>
+      <div class="nav-tab" data-tab="merchants"><span class="tab-icon">👤</span> 商家认领<span class="tab-badge" id="merchantBadge" style="display:none">0</span></div>
       <div class="nav-tab" data-tab="data"><span class="tab-icon">⬍</span> 数据管理</div>
     </nav>
     <div class="sidebar-footer">
@@ -318,6 +341,8 @@ body { background: var(--bg); color: var(--fg); font-family: var(--font-body); l
     <button data-tab="brands">品牌</button>
     <button data-tab="categories">分类</button>
     <button data-tab="pending">审核</button>
+    <button data-tab="reviews">评价</button>
+    <button data-tab="merchants">认领</button>
     <button data-tab="data">数据</button>
   </div>
 
@@ -343,7 +368,7 @@ body { background: var(--bg); color: var(--fg); font-family: var(--font-body); l
       </div>
       <div class="data-table-wrap">
         <table class="data-table" id="providerTable">
-          <thead><tr><th>商家</th><th>品牌</th><th>分类</th><th>评分</th><th>状态</th><th>操作</th></tr></thead>
+          <thead><tr><th>商家</th><th>网址</th><th>品牌</th><th>分类</th><th>建站日期</th><th>访问</th><th>收藏</th><th>排序</th><th>状态</th><th>操作</th></tr></thead>
           <tbody id="providerTableBody"></tbody>
         </table>
       </div>
@@ -370,12 +395,13 @@ body { background: var(--bg); color: var(--fg); font-family: var(--font-body); l
       <h2 class="page-title">分类管理</h2>
       <p class="page-desc">维护商家分类，首页和提交页将自动同步</p>
       <div class="toolbar-row">
-        <input class="form-input" type="text" id="newCategoryInput" placeholder="新分类名称" style="max-width:200px;padding:6px 12px;font-size:12px;" />
+        <input class="form-input" type="text" id="newCategoryInput" placeholder="新分类名称" style="max-width:160px;padding:6px 12px;font-size:12px;" />
+        <input class="form-input" type="text" id="newCategoryDesc" placeholder="分类描述（可选）" style="max-width:280px;padding:6px 12px;font-size:12px;" />
         <button class="btn primary" id="btnAddCategory">添加分类</button>
       </div>
       <div class="data-table-wrap">
         <table class="data-table">
-          <thead><tr><th>分类名称</th><th>商家数</th><th>操作</th></tr></thead>
+          <thead><tr><th>分类名称</th><th>描述</th><th>商家数</th><th>操作</th></tr></thead>
           <tbody id="categoryTableBody"></tbody>
         </table>
       </div>
@@ -386,6 +412,25 @@ body { background: var(--bg); color: var(--fg); font-family: var(--font-body); l
       <h2 class="page-title">提交审核</h2>
       <p class="page-desc">审核商家提交的入驻申请</p>
       <div id="pendingList"></div>
+    </div>
+
+    <!-- REVIEWS -->
+    <div class="tab-content" id="tab-reviews">
+      <h2 class="page-title">评价审核</h2>
+      <p class="page-desc">审核用户提交的评价，通过后自动更新商家评分</p>
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button class="btn sm primary" id="reviewFilterPending" onclick="loadReviews('pending')">待审核</button>
+        <button class="btn sm" id="reviewFilterApproved" onclick="loadReviews('approved')">已通过</button>
+        <button class="btn sm" id="reviewFilterRejected" onclick="loadReviews('rejected')">已拒绝</button>
+      </div>
+      <div id="reviewList"></div>
+    </div>
+
+    <!-- MERCHANTS -->
+    <div class="tab-content" id="tab-merchants">
+      <h2 class="page-title">商家认领</h2>
+      <p class="page-desc">审核商家认领申请，通过后商家可自助管理信息</p>
+      <div id="merchantList"></div>
     </div>
 
     <!-- DATA -->
@@ -474,6 +519,10 @@ body { background: var(--bg); color: var(--fg); font-family: var(--font-body); l
       <div class="field">
         <label>分类名称<span class="req">*</span></label>
         <input type="text" id="categoryEditInput" />
+      </div>
+      <div class="field">
+        <label>分类描述</label>
+        <textarea id="categoryEditDesc" rows="3" style="resize:vertical;"></textarea>
       </div>
     </div>
     <div class="modal-footer">
@@ -571,32 +620,45 @@ function switchTab(tab) {
   document.getElementById('tab-' + tab).classList.add('active');
   document.querySelectorAll('.nav-tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
   document.querySelectorAll('.mobile-tab-bar button').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
-  refreshAll();
+  if (tab === 'reviews') { loadReviews(_reviewStatus); } else { refreshAll(); }
 }
 document.querySelectorAll('.nav-tab').forEach(el => el.addEventListener('click', () => switchTab(el.dataset.tab)));
 document.querySelectorAll('.mobile-tab-bar button').forEach(el => el.addEventListener('click', () => switchTab(el.dataset.tab)));
 
 /* ========== DATA CACHE ========== */
-let _providers = [], _brands = [], _categories = [], _pending = [];
+let _providers = [], _brands = [], _categories = [], _pending = [], _reviews = [], _merchants = [];
+let _reviewStatus = 'pending';
 
 async function refreshAll() {
   try {
-    const [pRes, bRes, cRes, pendRes] = await Promise.all([
+    const [pRes, bRes, cRes, pendRes, revRes, merchRes] = await Promise.all([
       api('/api/admin/providers').then(r => r.json()),
       api('/api/admin/brands').then(r => r.json()),
       api('/api/admin/categories').then(r => r.json()),
-      api('/api/admin/pending').then(r => r.json())
+      api('/api/admin/pending').then(r => r.json()),
+      api('/api/admin/reviews?status=pending').then(r => r.json()).catch(() => ({ reviews: [] })),
+      api('/api/admin/merchants').then(r => r.json()).catch(() => ({ merchants: [] }))
     ]);
     _providers = pRes.providers || [];
     _brands = bRes.brands || [];
     _categories = cRes.categories || [];
     _pending = pendRes.pending || [];
+    _reviews = revRes.reviews || [];
+    _merchants = merchRes.merchants || [];
     renderOverview();
     renderProviderTable();
     renderBrandTable();
     renderCategoryTable();
     renderPendingList();
     updatePendingBadge();
+    updateReviewBadge();
+    updateMerchantBadge();
+    if (document.getElementById('tab-reviews').classList.contains('active')) {
+      renderReviewList();
+    }
+    if (document.getElementById('tab-merchants').classList.contains('active')) {
+      renderMerchantList();
+    }
   } catch (e) {
     if (e.message !== 'Unauthorized') console.error('refreshAll error:', e);
   }
@@ -612,6 +674,8 @@ function updatePendingBadge() {
 function renderOverview() {
   const online = _providers.filter(p => p.online).length;
   const offline = _providers.length - online;
+  const totalClicks = _providers.reduce((s, p) => s + (p.click_count || 0), 0);
+  const totalFavs = _providers.reduce((s, p) => s + (p.favorite_count || 0), 0);
   document.getElementById('overviewStats').innerHTML = `
     <div class="stat-card"><span class="stat-val">${_providers.length}</span><span class="stat-label">总商家数</span></div>
     <div class="stat-card"><span class="stat-val success">${online}</span><span class="stat-label">在线</span></div>
@@ -619,6 +683,8 @@ function renderOverview() {
     <div class="stat-card"><span class="stat-val accent">${_brands.length}</span><span class="stat-label">品牌数</span></div>
     <div class="stat-card"><span class="stat-val">${_categories.length}</span><span class="stat-label">分类数</span></div>
     <div class="stat-card"><span class="stat-val danger">${_pending.length}</span><span class="stat-label">待审核</span></div>
+    <div class="stat-card"><span class="stat-val accent">${totalClicks}</span><span class="stat-label">总访问次数</span></div>
+    <div class="stat-card"><span class="stat-val danger">${totalFavs}</span><span class="stat-label">总收藏数</span></div>
   `;
   const el = document.getElementById('recentPending');
   if (_pending.length === 0) {
@@ -640,12 +706,16 @@ function renderProviderTable() {
   if (providerSearch) list = list.filter(p => p.name.toLowerCase().includes(providerSearch) || (p.brands || []).some(b => b.toLowerCase().includes(providerSearch)));
 
   document.getElementById('providerTableBody').innerHTML = list.length === 0
-    ? '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px;">无匹配商家</td></tr>'
+    ? '<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:24px;">无匹配商家</td></tr>'
     : list.map(p => `<tr>
-        <td><div class="name-cell"><div class="mini-logo" style="background:${p.color || '#888'}">${(p.name || '?')[0]}</div>${p.name}</div></td>
+        <td><div class="name-cell">${p.logo_url ? `<img src="/api/logo/${p.id}" class="mini-logo-img" onerror="this.outerHTML='<div class=\\'mini-logo\\' style=\\'background:${p.color || '#888'}\\'>${(p.name || '?')[0]}</div>'" />` : `<div class="mini-logo" style="background:${p.color || '#888'}">${(p.name || '?')[0]}</div>`}${p.name}</div></td>
+        <td>${p.url && p.url !== '#' ? `<a href="${esc(p.url)}" target="_blank" style="color:var(--accent);font-size:12px;text-decoration:none;">${esc(p.url.length > 24 ? p.url.substring(0, 24) + '…' : p.url)}</a>` : '<span style="color:var(--muted);">—</span>'}</td>
         <td><div class="brand-tags">${(p.brands || []).slice(0, 3).map(b => `<span class="tag">${b}</span>`).join('')}${(p.brands || []).length > 3 ? `<span class="tag highlight">+${(p.brands || []).length-3}</span>` : ''}</div></td>
         <td>${p.category || '—'}</td>
-        <td style="font-family:var(--font-mono);color:var(--accent);">${p.rating || '—'}</td>
+        <td style="font-family:var(--font-mono);color:var(--success);">${p.founded_at || '—'}</td>
+        <td style="font-family:var(--font-mono);color:var(--muted);">${p.click_count || 0}</td>
+        <td style="font-family:var(--font-mono);color:var(--danger);">${p.favorite_count || 0}</td>
+        <td style="font-family:var(--font-mono);color:${p.sort_order ? 'var(--accent)' : 'var(--muted)'};">${p.sort_order || '—'}</td>
         <td><span class="status-pill ${p.online ? 'online' : 'offline'}">${p.online ? '在线' : '下线'}</span></td>
         <td class="actions">
           <button class="btn sm" onclick="editProvider('${p.id}')">编辑</button>
@@ -659,21 +729,47 @@ document.getElementById('btnAddProvider').addEventListener('click', () => { edit
 
 function editProvider(id) { editingProviderId = id; showProviderModal(_providers.find(p => p.id === id)); }
 
+let _editingProviderData = null;
+let _editingLogoUrl = '';
+let _providerPricingPlans = [];
+
+async function uploadLogo(file, providerId) {
+  const formData = new FormData();
+  formData.append('file', file);
+  const url = '/api/admin/upload-logo' + (providerId ? '?provider_id=' + encodeURIComponent(providerId) : '');
+  const token = sessionStorage.getItem('token');
+  const res = await fetch(url, { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData });
+  if (!res.ok) { const e = await res.json(); throw new Error(e.error || '上传失败'); }
+  return (await res.json()).logo_url;
+}
+
 function showProviderModal(p) {
   const isNew = !p;
+  _editingProviderData = p || null;
+  _editingLogoUrl = (!isNew && p.logo_url) ? p.logo_url : '';
   document.getElementById('providerModalTitle').textContent = isNew ? '添加商家' : '编辑商家';
   const selBrands = isNew ? [] : (p.brands || []);
   const selFeatures = isNew ? [] : (p.features || []);
+  const logoPreviewSrc = _editingLogoUrl ? `/api/logo/${p.id}` : '';
 
   document.getElementById('providerModalBody').innerHTML = `
+    <div class="logo-field">
+      <div class="logo-preview" id="logoPreview">${logoPreviewSrc ? `<img src="${logoPreviewSrc}" alt="logo" />` : ((!isNew && p.color) ? `<div style="background:${p.color};width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:600;">${(p.name || '?')[0]}</div>` : '?')}</div>
+      <div>
+        <label class="logo-upload-btn" for="logoFileInput">选择图片</label>
+        <input type="file" id="logoFileInput" accept="image/png,image/jpeg,image/svg+xml" hidden />
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">PNG/JPG/SVG，≤2MB</div>
+      </div>
+    </div>
     <div class="field"><label>商家名称<span class="req">*</span></label><input type="text" id="pName" value="${isNew ? '' : esc(p.name)}" /></div>
+    <div class="field"><label>网站链接 <span style="font-weight:400;color:var(--muted);font-size:11px;">如 https://example.com</span></label><input type="url" id="pUrl" value="${isNew ? '' : esc(p.url === '#' ? '' : (p.url || ''))}" placeholder="https://example.com" /></div>
     <div class="field-inline">
       <div class="field"><label>品牌色</label><input type="color" id="pColor" value="${isNew ? '#3B6F8C' : (p.color || '#3B6F8C')}" style="height:36px;padding:2px;" /></div>
-      <div class="field"><label>网站链接</label><input type="url" id="pUrl" value="${isNew ? '' : esc(p.url || '')}" /></div>
+      <div class="field"><label>分类<span class="req">*</span></label><select id="pCategory">${_categories.map(c => `<option value="${esc(c.name)}" ${!isNew && p.category === c.name ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>
     </div>
     <div class="field-inline">
-      <div class="field"><label>分类<span class="req">*</span></label><select id="pCategory">${_categories.map(c => `<option value="${esc(c.name)}" ${!isNew && p.category === c.name ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>
-      <div class="field"><label>评分</label><input type="number" id="pRating" value="${isNew ? '4.0' : (p.rating || '4.0')}" step="0.1" min="0" max="5" /></div>
+      <div class="field"><label>状态</label><select id="pStatus"><option value="ok" ${!isNew && p.status === 'ok' ? 'selected' : ''}>正常</option><option value="degraded" ${!isNew && p.status === 'degraded' ? 'selected' : ''}>降级</option><option value="down" ${!isNew && p.status === 'down' ? 'selected' : ''}>故障</option></select></div>
+      <div class="field"><label>建站日期 <span style="font-weight:400;color:var(--muted);font-size:11px;">如 2023-06 或 2024</span></label><input type="text" id="pFoundedAt" value="${isNew ? '' : esc(p.founded_at || '')}" placeholder="2023-06" /></div>
     </div>
     <div class="field"><label>简介<span class="req">*</span></label><textarea id="pDesc" rows="3">${isNew ? '' : esc(p.desc || '')}</textarea></div>
     <div class="field"><label>支持品牌<span class="req">*</span></label>
@@ -683,16 +779,221 @@ function showProviderModal(p) {
       <div style="display:flex;gap:6px;"><input type="text" id="pFeatureInput" placeholder="输入特性标签，回车添加" style="flex:1;" /><button class="btn sm" onclick="addProviderFeature()">添加</button></div>
       <div class="feature-chips" id="pFeatureChips">${selFeatures.map((f, i) => `<span class="feature-chip">${esc(f)}<span class="remove" onclick="removeProviderFeature(${i})">×</span></span>`).join('')}</div>
     </div>
+    <div class="field"><label>显示顺序 <span style="font-weight:400;color:var(--muted);font-size:11px;">数字越小越靠前，0 表示默认排序</span></label><input type="number" id="pSortOrder" value="${isNew ? 0 : (p.sort_order || 0)}" min="0" step="1" /></div>
     <div class="field-inline">
-      <div class="field"><label>可用率</label><input type="text" id="pUptime" value="${isNew ? '99.5%' : (p.uptime || '—')}" /></div>
-      <div class="field"><label>首 token 延迟</label><input type="text" id="pSpeed" value="${isNew ? '1.0s' : (p.speed || '—')}" /></div>
+      <div class="field"><label>输入价格 <span style="font-weight:400;color:var(--muted);font-size:11px;">每百万token</span></label><input type="text" id="pInputPrice" value="${isNew ? '' : esc(p.input_price || '')}" placeholder="¥14" /></div>
+      <div class="field"><label>输出价格</label><input type="text" id="pOutputPrice" value="${isNew ? '' : esc(p.output_price || '')}" placeholder="¥28" /></div>
     </div>
+    <div class="field-inline">
+      <div class="field"><label>计费方式</label><select id="pBillingType">
+        <option value="" ${!isNew && !p.billing_type ? 'selected' : ''}>请选择</option>
+        <option value="pay_as_you_go" ${!isNew && p.billing_type === 'pay_as_you_go' ? 'selected' : ''}>按量计费</option>
+        <option value="subscription" ${!isNew && p.billing_type === 'subscription' ? 'selected' : ''}>包月/包年</option>
+        <option value="free" ${!isNew && p.billing_type === 'free' ? 'selected' : ''}>免费</option>
+        <option value="enterprise" ${!isNew && p.billing_type === 'enterprise' ? 'selected' : ''}>企业定制</option>
+      </select></div>
+      <div class="field"><label>目标用户</label><select id="pTargetAudience">
+        <option value="通用" ${!isNew && p.target_audience === '通用' ? 'selected' : ''}>通用</option>
+        <option value="个人开发者" ${!isNew && p.target_audience === '个人开发者' ? 'selected' : ''}>个人开发者</option>
+        <option value="企业" ${!isNew && p.target_audience === '企业' ? 'selected' : ''}>企业</option>
+        <option value="学生" ${!isNew && p.target_audience === '学生' ? 'selected' : ''}>学生</option>
+      </select></div>
+    </div>
+    <div class="field"><label><input type="checkbox" id="pFreeQuota" ${!isNew && p.free_quota ? 'checked' : ''} style="margin-right:6px;accent-color:var(--accent);" />提供免费额度/试用额度</label></div>
+    ${!isNew ? `<div class="field-inline"><div class="field"><label>访问次数</label><input type="text" value="${p.click_count || 0}" disabled style="color:var(--muted);background:var(--border);" /></div><div class="field"><label>收藏数</label><input type="text" value="${p.favorite_count || 0}" disabled style="color:var(--muted);background:var(--border);" /></div></div>` : ''}
+    <div class="field"><label>定价套餐 <span style="font-weight:400;color:var(--muted);font-size:11px;">按模型族/分组设置倍率与分层价（PriceAI 风格）</span></label>
+      <div id="pPricingPlans"></div>
+      <button class="btn sm" id="btnAddPricingPlan" type="button">+ 添加套餐</button>
+    </div>
+    ${!isNew ? `
+    <div class="field"><label>服务状态监测 <span style="font-weight:400;color:var(--muted);font-size:11px;">记录可用率/延迟快照，详情页展示时间线</span></label>
+      <div id="pMonitoringList" style="margin-bottom:10px;"></div>
+      <div style="border:1px dashed var(--border);border-radius:8px;padding:12px;">
+        <div class="field-inline">
+          <div class="field"><label>模型族(留空=整体)</label><input id="mFamily" placeholder="如 ChatGPT" /></div>
+          <div class="field"><label>可用率 %</label><input id="mAvail" type="number" step="0.1" placeholder="93.1" /></div>
+        </div>
+        <div class="field-inline">
+          <div class="field"><label>延迟最近(s)</label><input id="mLat" type="number" step="0.1" /></div>
+          <div class="field"><label>延迟7日(s)</label><input id="mLat7" type="number" step="0.1" /></div>
+        </div>
+        <div class="field-inline">
+          <div class="field"><label>缓存命中 %</label><input id="mCache" type="number" step="0.1" /></div>
+          <div class="field"><label>样本数</label><input id="mSample" type="number" step="1" /></div>
+        </div>
+        <div class="field"><label>备注/来源</label><input id="mNote" placeholder="如 站方公开监测" /></div>
+        <button class="btn sm primary" id="btnRecordMonitoring" type="button">记录监测快照</button>
+      </div>
+    </div>` : ''}
   `;
   document.querySelectorAll('#pBrandChecks .brand-check').forEach(el => {
     el.addEventListener('click', () => el.classList.toggle('selected'));
   });
   document.getElementById('pFeatureInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addProviderFeature(); } });
+  document.getElementById('logoFileInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const preview = document.getElementById('logoPreview');
+    preview.innerHTML = '<span style="font-size:12px;">上传中…</span>';
+    try {
+      const pid = _editingProviderData ? _editingProviderData.id : null;
+      _editingLogoUrl = await uploadLogo(file, pid);
+      const reader = new FileReader();
+      reader.onload = (ev) => { preview.innerHTML = `<img src="${ev.target.result}" alt="logo" />`; };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      preview.innerHTML = '<span style="color:var(--danger);font-size:11px;">上传失败</span>';
+      toast(err.message, 'error');
+    }
+  });
+  _providerPricingPlans = (!isNew && p.pricing_plans) ? p.pricing_plans : [];
+  renderPricingPlans();
+  document.getElementById('btnAddPricingPlan').addEventListener('click', addPricingPlan);
+  if (!isNew) {
+    const recBtn = document.getElementById('btnRecordMonitoring');
+    if (recBtn) recBtn.addEventListener('click', recordMonitoring);
+    loadProviderMonitoring(p.id);
+  }
   openModal('providerModal');
+}
+
+/* ========== PRICING PLANS (PriceAI 风格) ========== */
+function collectPricingPlans() {
+  const wrap = document.getElementById('pPricingPlans');
+  if (!wrap) return [];
+  return Array.from(wrap.querySelectorAll('.price-plan')).map(card => ({
+    family: (card.querySelector('.pp-family') || {}).value ? card.querySelector('.pp-family').value.trim() : '',
+    group_name: (card.querySelector('.pp-group') || {}).value ? card.querySelector('.pp-group').value.trim() : '',
+    multiplier: parseFloat((card.querySelector('.pp-multiplier') || {}).value) || 0,
+    recharge_multiplier: parseFloat((card.querySelector('.pp-recharge') || {}).value) || 1,
+    input_price: (card.querySelector('.pp-input') || {}).value ? card.querySelector('.pp-input').value.trim() : '',
+    output_price: (card.querySelector('.pp-output') || {}).value ? card.querySelector('.pp-output').value.trim() : '',
+    cache_write_price: (card.querySelector('.pp-cwrite') || {}).value ? card.querySelector('.pp-cwrite').value.trim() : '',
+    cache_read_price: (card.querySelector('.pp-cread') || {}).value ? card.querySelector('.pp-cread').value.trim() : '',
+    cache_hit_rate: parseFloat((card.querySelector('.pp-cache') || {}).value) || 0,
+    availability: parseFloat((card.querySelector('.pp-avail') || {}).value) || 0,
+    latency_recent: parseFloat((card.querySelector('.pp-lat') || {}).value) || 0,
+    latency_7d: parseFloat((card.querySelector('.pp-lat7') || {}).value) || 0,
+    fixed_price: (card.querySelector('.pp-fixed') || {}).value ? card.querySelector('.pp-fixed').value.trim() : '',
+    models: (card.querySelector('.pp-models') || {}).value ? card.querySelector('.pp-models').value.split(',').map(s => s.trim()).filter(Boolean) : [],
+    note: (card.querySelector('.pp-note') || {}).value ? card.querySelector('.pp-note').value.trim() : ''
+  })).filter(p => p.family || p.group_name || p.input_price || p.fixed_price);
+}
+
+function syncPricingPlansFromDom() { _providerPricingPlans = collectPricingPlans(); }
+
+function renderPricingPlans() {
+  const wrap = document.getElementById('pPricingPlans');
+  if (!wrap) return;
+  if (!_providerPricingPlans.length) {
+    wrap.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0;">暂无套餐，点击“+ 添加套餐”按模型族录入倍率与分层价。</div>';
+    return;
+  }
+  wrap.innerHTML = _providerPricingPlans.map((pl, i) => `
+    <div class="price-plan" data-idx="${i}">
+      <div class="pp-head">
+        <span class="pp-title">套餐 #${i + 1}${pl.family ? ' · ' + esc(pl.family) : ''}${pl.group_name ? ' / ' + esc(pl.group_name) : ''}</span>
+        <button class="btn sm danger" type="button" onclick="removePricingPlan(${i})">删除</button>
+      </div>
+      <div class="pp-row">
+        <div class="field"><label>模型族</label><input class="pp-family" value="${esc(pl.family || '')}" placeholder="如 ChatGPT" /></div>
+        <div class="field"><label>分组名</label><input class="pp-group" value="${esc(pl.group_name || '')}" placeholder="如 gpt-plus" /></div>
+      </div>
+      <div class="pp-row">
+        <div class="field"><label>倍率(×官方)</label><input class="pp-multiplier" type="number" step="0.01" value="${pl.multiplier || 0}" /></div>
+        <div class="field"><label>充值倍率</label><input class="pp-recharge" type="number" step="0.01" value="${pl.recharge_multiplier || 1}" /></div>
+      </div>
+      <div class="pp-row">
+        <div class="field"><label>输入价</label><input class="pp-input" value="${esc(pl.input_price || '')}" placeholder="¥0.25/M" /></div>
+        <div class="field"><label>输出价</label><input class="pp-output" value="${esc(pl.output_price || '')}" placeholder="¥1.50/M" /></div>
+      </div>
+      <div class="pp-row">
+        <div class="field"><label>缓存写价</label><input class="pp-cwrite" value="${esc(pl.cache_write_price || '')}" placeholder="¥0.31/M" /></div>
+        <div class="field"><label>缓存读价</label><input class="pp-cread" value="${esc(pl.cache_read_price || '')}" placeholder="¥0.025/M" /></div>
+      </div>
+      <div class="pp-row">
+        <div class="field"><label>缓存命中 %</label><input class="pp-cache" type="number" step="0.1" value="${pl.cache_hit_rate || 0}" /></div>
+        <div class="field"><label>可用率 %</label><input class="pp-avail" type="number" step="0.1" value="${pl.availability || 0}" /></div>
+      </div>
+      <div class="pp-row">
+        <div class="field"><label>延迟最近(s)</label><input class="pp-lat" type="number" step="0.1" value="${pl.latency_recent || 0}" /></div>
+        <div class="field"><label>延迟7日(s)</label><input class="pp-lat7" type="number" step="0.1" value="${pl.latency_7d || 0}" /></div>
+      </div>
+      <div class="pp-row">
+        <div class="field"><label>固定价(生图)</label><input class="pp-fixed" value="${esc(pl.fixed_price || '')}" placeholder="¥0.08/次" /></div>
+        <div class="field"><label>模型(逗号分隔)</label><input class="pp-models" value="${esc((pl.models || []).join(', '))}" /></div>
+      </div>
+      <div class="field"><label>备注</label><input class="pp-note" value="${esc(pl.note || '')}" placeholder="渠道说明" /></div>
+    </div>
+  `).join('');
+}
+
+function addPricingPlan() {
+  syncPricingPlansFromDom();
+  _providerPricingPlans.push({ family: '', group_name: '', multiplier: 0, recharge_multiplier: 1, input_price: '', output_price: '', cache_write_price: '', cache_read_price: '', cache_hit_rate: 0, availability: 0, latency_recent: 0, latency_7d: 0, fixed_price: '', models: [], note: '' });
+  renderPricingPlans();
+}
+
+function removePricingPlan(i) {
+  syncPricingPlansFromDom();
+  _providerPricingPlans.splice(i, 1);
+  renderPricingPlans();
+}
+
+/* ========== MONITORING ========== */
+async function loadProviderMonitoring(pid) {
+  const el = document.getElementById('pMonitoringList');
+  if (!el) return;
+  try {
+    const res = await api('/api/admin/monitoring?provider_id=' + encodeURIComponent(pid));
+    const data = await res.json();
+    const rows = data.monitoring || [];
+    if (!rows.length) { el.innerHTML = '<div style="font-size:12px;color:var(--muted);">暂无监测记录。</div>'; return; }
+    el.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">' + rows.map(r => `
+      <div style="border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:12px;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <strong>${esc(r.family || '整体')}</strong>
+          <span style="color:var(--muted);">可用率 ${r.availability || 0}%</span>
+          <span style="color:var(--muted);">延迟 ${r.latency_recent || 0}s</span>
+          <span style="color:var(--muted);">缓存 ${r.cache_hit_rate || 0}%</span>
+          <span style="margin-inline-start:auto;color:var(--muted);">${esc(r.checked_at || '')}</span>
+          <button class="btn sm danger" type="button" onclick="deleteMonitoring(${r.id})">删</button>
+        </div>
+        ${r.note ? `<div style="color:var(--muted);margin-top:2px;">${esc(r.note)}</div>` : ''}
+      </div>
+    `).join('') + '</div>';
+  } catch { el.innerHTML = '<div style="font-size:12px;color:var(--danger);">加载失败</div>'; }
+}
+
+async function recordMonitoring() {
+  const pid = editingProviderId;
+  if (!pid) { toast('请先保存商家', 'error'); return; }
+  const body = {
+    provider_id: pid,
+    family: document.getElementById('mFamily').value.trim(),
+    availability: parseFloat(document.getElementById('mAvail').value) || 0,
+    latency_recent: parseFloat(document.getElementById('mLat').value) || 0,
+    latency_7d: parseFloat(document.getElementById('mLat7').value) || 0,
+    cache_hit_rate: parseFloat(document.getElementById('mCache').value) || 0,
+    sample_count: parseInt(document.getElementById('mSample').value) || 0,
+    note: document.getElementById('mNote').value.trim()
+  };
+  try {
+    const res = await api('/api/admin/monitoring', { method: 'POST', body });
+    if (res.ok) {
+      ['mFamily', 'mAvail', 'mLat', 'mLat7', 'mCache', 'mSample', 'mNote'].forEach(id => document.getElementById(id).value = '');
+      await loadProviderMonitoring(pid);
+      toast('已记录监测');
+    } else { const e = await res.json(); toast(e.error || '记录失败', 'error'); }
+  } catch { toast('记录失败', 'error'); }
+}
+
+async function deleteMonitoring(id) {
+  try {
+    await api('/api/admin/monitoring/' + id, { method: 'DELETE' });
+    toast('已删除');
+    if (editingProviderId) loadProviderMonitoring(editingProviderId);
+  } catch { toast('删除失败', 'error'); }
 }
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
@@ -730,13 +1031,24 @@ document.getElementById('btnSaveProvider').addEventListener('click', async () =>
   if (!name || !category || !desc) { toast('请填写必填项', 'error'); return; }
   if (selectedBrands.length === 0) { toast('请至少选择一个品牌', 'error'); return; }
 
+  const ep = _editingProviderData || {};
   const body = {
     name, color: document.getElementById('pColor').value,
-    category, desc, rating: parseFloat(document.getElementById('pRating').value) || 4.0,
+    category, desc,
     brands: selectedBrands, features,
-    status: 'ok', uptime: document.getElementById('pUptime').value || '—',
-    speed: document.getElementById('pSpeed').value || '—',
-    url: document.getElementById('pUrl').value || '#', online: true
+    status: document.getElementById('pStatus').value || 'ok',
+    founded_at: document.getElementById('pFoundedAt').value.trim(),
+    url: document.getElementById('pUrl').value.trim() || '#',
+    online: ep.online !== false,
+    input_price: document.getElementById('pInputPrice').value.trim(),
+    output_price: document.getElementById('pOutputPrice').value.trim(),
+    sort_order: parseInt(document.getElementById('pSortOrder').value) || 0,
+    logo_url: _editingLogoUrl || ep.logo_url || '',
+    billing_type: document.getElementById('pBillingType').value,
+    supported_models: selectedBrands,
+    target_audience: document.getElementById('pTargetAudience').value,
+    free_quota: document.getElementById('pFreeQuota').checked ? 1 : 0,
+    pricing_plans: collectPricingPlans()
   };
 
   try {
@@ -822,16 +1134,17 @@ let editingCategoryId = null;
 function renderCategoryTable() {
   document.getElementById('categoryTableBody').innerHTML = _categories.map(c => {
     const count = _providers.filter(p => p.category === c.name).length;
-    return `<tr><td style="font-weight:500;">${esc(c.name)}</td><td style="font-family:var(--font-mono);color:var(--muted);">${count}</td><td class="actions"><button class="btn sm" onclick="editCategory(${c.id})">编辑</button><button class="btn sm danger" onclick="deleteCategory(${c.id})">删除</button></td></tr>`;
+    return `<tr><td style="font-weight:500;">${esc(c.name)}</td><td style="font-size:12px;color:var(--muted);max-width:300px;">${esc(c.description || '—')}</td><td style="font-family:var(--font-mono);color:var(--muted);">${count}</td><td class="actions"><button class="btn sm" onclick="editCategory(${c.id})">编辑</button><button class="btn sm danger" onclick="deleteCategory(${c.id})">删除</button></td></tr>`;
   }).join('');
 }
 
 document.getElementById('btnAddCategory').addEventListener('click', async () => {
   const val = document.getElementById('newCategoryInput').value.trim();
+  const desc = document.getElementById('newCategoryDesc').value.trim();
   if (!val) return;
   try {
-    const res = await api('/api/admin/categories', { method: 'POST', body: { name: val } });
-    if (res.ok) { document.getElementById('newCategoryInput').value = ''; toast('分类已添加'); refreshAll(); }
+    const res = await api('/api/admin/categories', { method: 'POST', body: { name: val, description: desc } });
+    if (res.ok) { document.getElementById('newCategoryInput').value = ''; document.getElementById('newCategoryDesc').value = ''; toast('分类已添加'); refreshAll(); }
     else { const e = await res.json(); toast(e.error || '添加失败', 'error'); }
   } catch { toast('操作失败', 'error'); }
 });
@@ -842,13 +1155,15 @@ function editCategory(id) {
   const c = _categories.find(x => x.id === id);
   document.getElementById('categoryModalTitle').textContent = '编辑分类';
   document.getElementById('categoryEditInput').value = c ? c.name : '';
+  document.getElementById('categoryEditDesc').value = c ? (c.description || '') : '';
   openModal('categoryModal');
 }
 document.getElementById('btnSaveCategory').addEventListener('click', async () => {
   const val = document.getElementById('categoryEditInput').value.trim();
+  const desc = document.getElementById('categoryEditDesc').value.trim();
   if (!val) { toast('分类名不能为空', 'error'); return; }
   try {
-    const res = await api('/api/admin/categories/' + editingCategoryId, { method: 'PUT', body: { name: val } });
+    const res = await api('/api/admin/categories/' + editingCategoryId, { method: 'PUT', body: { name: val, description: desc } });
     if (res.ok) { closeModal('categoryModal'); toast('分类已更新'); refreshAll(); }
     else { const e = await res.json(); toast(e.error || '更新失败', 'error'); }
   } catch { toast('操作失败', 'error'); }
@@ -900,6 +1215,137 @@ function rejectPending(id) {
   const p = _pending.find(x => x.id === id);
   showConfirm('拒绝申请', `确定要拒绝 <strong>${p ? p.name : '该商家'}</strong> 的申请吗？`, async () => {
     try { await api('/api/admin/pending/' + id + '/reject', { method: 'POST' }); toast('已拒绝'); refreshAll(); } catch { toast('操作失败', 'error'); }
+  });
+}
+
+/* ========== REVIEW MANAGEMENT ========== */
+function updateReviewBadge() {
+  const badge = document.getElementById('reviewBadge');
+  const pendingCount = _reviews.filter(r => r.status === 'pending').length;
+  badge.textContent = pendingCount;
+  badge.style.display = pendingCount > 0 ? 'inline' : 'none';
+}
+
+async function loadReviews(status) {
+  _reviewStatus = status || 'pending';
+  // Update active button style
+  ['reviewFilterPending', 'reviewFilterApproved', 'reviewFilterRejected'].forEach(id => {
+    const btn = document.getElementById(id);
+    btn.className = 'btn sm' + (btn.id === 'reviewFilter' + _reviewStatus.charAt(0).toUpperCase() + _reviewStatus.slice(1) ? ' primary' : '');
+  });
+  try {
+    const fetches = [api('/api/admin/reviews?status=' + _reviewStatus).then(r => r.json())];
+    if (_reviewStatus !== 'pending') fetches.push(api('/api/admin/reviews?status=pending').then(r => r.json()).catch(() => ({ reviews: [] })));
+    const results = await Promise.all(fetches);
+    _reviews = results[0].reviews || [];
+    if (results[1]) {
+      const pendingCount = (results[1].reviews || []).length;
+      const badge = document.getElementById('reviewBadge');
+      badge.textContent = pendingCount;
+      badge.style.display = pendingCount > 0 ? 'inline' : 'none';
+    }
+    renderReviewList();
+  } catch { toast('加载评价失败', 'error'); }
+}
+
+function renderReviewList() {
+  const el = document.getElementById('reviewList');
+  const reviews = _reviews;
+  if (!reviews.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>暂无' +
+      (_reviewStatus === 'pending' ? '待审核' : _reviewStatus === 'approved' ? '已通过' : '已拒绝') + '评价</p></div>';
+    return;
+  }
+  const statusLabel = { pending: '待审核', approved: '已通过', rejected: '已拒绝' };
+  el.innerHTML = reviews.map(r => {
+    const tags = (() => { try { return JSON.parse(r.tags || '[]'); } catch { return []; } })();
+    const stars = '★'.repeat(r.score) + '☆'.repeat(5 - r.score);
+    const prov = _providers.find(p => p.id === r.provider_id);
+    return `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap;">
+          <span style="font-weight:600;font-size:14px;color:var(--accent);">${stars}</span>
+          <span class="status-pill ${r.status}">${statusLabel[r.status] || r.status}</span>
+          <span style="margin-inline-start:auto;font-size:12px;color:var(--muted);">${r.created_at || ''}</span>
+        </div>
+        <div style="font-size:13px;color:var(--fg);margin-bottom:6px;">商家：${esc(prov ? prov.name : r.provider_id)}</div>
+        ${r.content ? `<div style="font-size:13px;color:var(--fg);margin-bottom:6px;">${esc(r.content)}</div>` : ''}
+        ${tags.length ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;">${tags.map(t => `<span style="font-size:11px;padding:2px 8px;border-radius:99px;background:var(--border);color:var(--muted);">${esc(t)}</span>`).join('')}</div>` : ''}
+        ${r.status === 'pending' ? `
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button class="btn sm primary" onclick="approveReview(${r.id})">通过</button>
+            <button class="btn sm danger" onclick="rejectReview(${r.id})">拒绝</button>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+async function approveReview(id) {
+  try { await api('/api/admin/reviews/' + id + '/approve', { method: 'POST' }); toast('已通过评价'); refreshAll(); } catch { toast('操作失败', 'error'); }
+}
+
+function rejectReview(id) {
+  showConfirm('拒绝评价', '确定要拒绝这条评价吗？', async () => {
+    try { await api('/api/admin/reviews/' + id + '/reject', { method: 'POST' }); toast('已拒绝评价'); refreshAll(); } catch { toast('操作失败', 'error'); }
+  });
+}
+
+/* ========== MERCHANT MANAGEMENT ========== */
+function updateMerchantBadge() {
+  const badge = document.getElementById('merchantBadge');
+  const pendingCount = _merchants.filter(m => m.status === 'pending').length;
+  badge.textContent = pendingCount;
+  badge.style.display = pendingCount > 0 ? 'inline' : 'none';
+}
+
+function renderMerchantList() {
+  const el = document.getElementById('merchantList');
+  if (!_merchants.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>暂无商家认领申请</p></div>';
+    return;
+  }
+  const statusLabels = { pending: '待审核', approved: '已通过', rejected: '已拒绝' };
+  el.innerHTML = _merchants.map(m => `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap;">
+        <span style="font-weight:600;font-size:14px;">${esc(m.email)}</span>
+        <span class="status-pill ${m.status}">${statusLabels[m.status] || m.status}</span>
+        <span style="margin-inline-start:auto;font-size:12px;color:var(--muted);">${m.created_at || ''}</span>
+      </div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">认领商家：<strong>${esc(m.provider_name || m.provider_id)}</strong></div>
+      ${m.status === 'pending' ? `
+        <div style="display:flex;gap:8px;">
+          <button class="btn sm primary" onclick="approveMerchant(${m.id})">批准认领</button>
+          <button class="btn sm danger" onclick="rejectMerchant(${m.id})">拒绝</button>
+        </div>
+      ` : m.status === 'approved' ? `
+        <div style="display:flex;gap:8px;">
+          <button class="btn sm danger" onclick="deleteMerchant(${m.id})">删除账号</button>
+        </div>
+      ` : `
+        <div style="display:flex;gap:8px;">
+          <button class="btn sm danger" onclick="deleteMerchant(${m.id})">删除</button>
+        </div>
+      `}
+    </div>
+  `).join('');
+}
+
+async function approveMerchant(id) {
+  try { await api('/api/admin/merchants/' + id + '/approve', { method: 'POST' }); toast('已批准认领'); refreshAll(); } catch { toast('操作失败', 'error'); }
+}
+
+function rejectMerchant(id) {
+  showConfirm('拒绝认领', '确定要拒绝该商家的认领申请吗？', async () => {
+    try { await api('/api/admin/merchants/' + id + '/reject', { method: 'POST' }); toast('已拒绝'); refreshAll(); } catch { toast('操作失败', 'error'); }
+  });
+}
+
+function deleteMerchant(id) {
+  showConfirm('删除商家', '确定要删除该商家账号吗？此操作不可撤销。', async () => {
+    try { await api('/api/admin/merchants/' + id, { method: 'DELETE' }); toast('已删除'); refreshAll(); } catch { toast('操作失败', 'error'); }
   });
 }
 

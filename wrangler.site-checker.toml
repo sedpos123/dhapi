@@ -1,0 +1,11 @@
+name = "dhapi-site-checker"
+main = "workers/site-checker.js"
+compatibility_date = "2024-12-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "llm-nav-db"
+database_id = "f3c4458e-51db-42cb-a222-acc6358bcb58"
+
+[triggers]
+crons = ["0 20 * * *"]

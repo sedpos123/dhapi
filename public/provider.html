@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>商家详情 — 中转导航</title>
+<meta name="description" content="查看大模型 API 中转商家详细信息，包括倍率定价、可用率监测、评分、用户评价和支持模型。" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="中转导航" />
+<style>
+:root {
+  --bg:      oklch(97% 0.012 80);
+  --surface: oklch(99% 0.005 80);
+  --fg:      oklch(20% 0.02 60);
+  --muted:   oklch(48% 0.015 60);
+  --border:  oklch(89% 0.012 80);
+  --accent:  oklch(58% 0.16 35);
+  --success: oklch(62% 0.17 145);
+  --warn:    oklch(75% 0.16 85);
+  --danger:  oklch(55% 0.2 25);
+  --font-display: 'Iowan Old Style', 'Charter', Georgia, serif;
+  --font-body:    -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono:    ui-monospace, 'JetBrains Mono', Menlo, monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); line-height: 1.5; }
+a, button, input, textarea { touch-action: manipulation; }
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 3px;
+}
+.topnav {
+  position: sticky; top: 0; z-index: 100;
+  background: oklch(97% 0.012 80 / 0.92);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px; height: 64px;
+  display: flex; align-items: center; gap: 24px;
+}
+.topnav .brand {
+  font-family: var(--font-display); font-size: 20px; font-weight: 600;
+  letter-spacing: -0.01em; color: var(--fg); white-space: nowrap; text-decoration: none;
+  display: flex; align-items: center; gap: 8px;
+}
+.topnav .brand img { width: 48px; height: 48px; border-radius: 10px; object-fit: contain; }
+.topnav .brand span { color: var(--accent); }
+.topnav .nav-links { display: flex; gap: 20px; margin-inline-start: auto; }
+.topnav .nav-links a { font-size: 13px; color: var(--muted); text-decoration: none; letter-spacing: 0.02em; transition: color .15s; }
+.topnav .nav-links a:hover { color: var(--fg); }
+@media (max-width: 640px) {
+  .topnav { height: auto; min-height: 60px; padding: 8px 16px; gap: 12px; flex-wrap: wrap; }
+  .topnav .brand { font-size: 18px; }
+  .topnav .brand img { width: 40px; height: 40px; }
+  .topnav .nav-links { width: 100%; gap: 12px; }
+  .topnav .nav-links a { min-height: 36px; display: inline-flex; align-items: center; }
+}
+.container { max-width: 800px; margin: 0 auto; padding: 32px 24px 96px; }
+.loading { text-align: center; padding: 80px 24px; color: var(--muted); }
+.error-view { text-align: center; padding: 80px 24px; }
+.error-view h2 { font-family: var(--font-display); font-size: 28px; margin-bottom: 12px; }
+.error-view p { color: var(--muted); margin-bottom: 24px; }
+
+.provider-header { display: flex; align-items: flex-start; gap: 20px; margin-bottom: 32px; }
+.provider-logo {
+  width: 72px; height: 72px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-size: 28px; font-weight: 600;
+  color: var(--surface); flex-shrink: 0;
+}
+.provider-logo img { width: 72px; height: 72px; border-radius: 12px; object-fit: cover; }
+.provider-info { flex: 1; min-width: 0; }
+.provider-info h1 {
+  font-family: var(--font-display); font-size: 28px; font-weight: 600;
+  letter-spacing: -0.02em; margin-bottom: 6px;
+}
+.provider-meta { display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.provider-desc { font-size: 15px; color: var(--muted); line-height: 1.7; margin-bottom: 32px; }
+.provider-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.secondary-btn {
+  display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 18px;
+  border: 1px solid var(--border); border-radius: 6px; background: var(--surface);
+  color: var(--fg); text-decoration: none; font-size: 14px; font-weight: 500;
+}
+.secondary-btn:hover { border-color: var(--accent); color: var(--accent); }
+@media (max-width: 560px) {
+  .container { padding: 24px 16px 112px; }
+  .provider-header { gap: 14px; margin-bottom: 24px; }
+  .provider-logo, .provider-logo img { width: 56px; height: 56px; border-radius: 10px; }
+  .provider-info h1 { font-size: 24px; }
+  .provider-actions { width: 100%; }
+  .provider-actions .cta-btn, .provider-actions .secondary-btn { flex: 1; }
+}
+
+.section { margin-bottom: 36px; }
+.section-title {
+  font-family: var(--font-mono); font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--muted); margin-bottom: 16px; font-weight: 500;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+@media (max-width: 600px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+.stat-card { padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; text-align: center; }
+.stat-val { font-family: var(--font-display); font-size: 24px; font-weight: 600; display: block; }
+.stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; display: block; }
+
+.info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+@media (max-width: 500px) { .info-grid { grid-template-columns: 1fr; } }
+.info-item { display: flex; justify-content: space-between; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+.info-item .label { color: var(--muted); }
+.info-item .value { font-weight: 500; }
+.site-status-card {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 14px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  padding: 14px 16px; font-size: 13px;
+}
+.site-status-main { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.site-status-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); flex: none; }
+.site-status-main.ok { color: var(--success); }
+.site-status-main.ok .site-status-dot { background: var(--success); }
+.site-status-main.error { color: var(--danger); }
+.site-status-main.error .site-status-dot { background: var(--danger); }
+.site-status-meta { color: var(--muted); text-align: right; line-height: 1.6; }
+@media (max-width: 520px) {
+  .site-status-card { flex-direction: column; }
+  .site-status-meta { text-align: left; }
+}
+
+.tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag {
+  font-size: 11px; padding: 3px 10px; border-radius: 4px;
+  font-family: var(--font-mono); letter-spacing: 0.01em;
+  background: oklch(97% 0.01 80); color: var(--muted); border: 1px solid var(--border);
+}
+.tag.highlight { background: oklch(95% 0.04 35); color: var(--accent); border-color: oklch(85% 0.06 35); }
+
+.feature-list { list-style: none; }
+.feature-list li {
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+  font-size: 14px; display: flex; align-items: center; gap: 8px;
+}
+.feature-list li:last-child { border-bottom: none; }
+.feature-list li::before { content: '✓'; color: var(--success); font-size: 13px; font-weight: 600; }
+
+.cta-btn {
+  display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 28px;
+  background: var(--accent); color: var(--surface);
+  border-radius: 6px; text-decoration: none;
+  font-size: 14px; font-weight: 500; transition: opacity .15s;
+}
+.cta-btn:hover { opacity: 0.88; }
+
+/* Pricing (PriceAI style) */
+.family-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 14px; }
+.family-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.family-head h3 { font-family: var(--font-display); font-size: 18px; font-weight: 600; }
+.family-mult { font-size: 12px; color: var(--muted); }
+.family-mult b { color: var(--accent); font-size: 15px; font-family: var(--font-mono); }
+.price-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.price-table th { text-align: start; padding: 6px 8px; color: var(--muted); font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--border); }
+.price-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.price-table tr:last-child td { border-bottom: none; }
+.price-table .fixed { display: inline-block; margin-top: 2px; font-size: 11px; color: var(--success); }
+.price-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
+.price-scroll .price-table { min-width: 680px; }
+.price-scroll .price-table th, .price-scroll .price-table td { white-space: nowrap; }
+
+/* Monitoring */
+.monitor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.monitor-stat { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; }
+.monitor-stat .v { font-family: var(--font-display); font-size: 20px; font-weight: 600; display: block; }
+.monitor-stat .l { font-size: 11px; color: var(--muted); margin-top: 2px; display: block; }
+.monitor-sub { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.monitor-chip { font-size: 12px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 99px; background: var(--surface); }
+.monitor-chip b { color: var(--accent); }
+.timeline { display: flex; flex-direction: column; gap: 8px; }
+.timeline-row { display: flex; gap: 10px; font-size: 12px; color: var(--muted); border-left: 2px solid var(--border); padding-left: 10px; flex-wrap: wrap; }
+.timeline-row .tl-family { color: var(--fg); font-weight: 500; min-width: 56px; }
+.risk-note { font-size: 12px; color: var(--muted); background: oklch(96% 0.02 85 / 0.4); border: 1px solid var(--border); border-radius: 8px; padding: 12px; line-height: 1.6; margin-top: 14px; }
+.risk-note b { color: var(--warn); }
+
+/* Rating distribution */
+.rating-summary { display: flex; gap: 24px; align-items: flex-start; margin-bottom: 20px; }
+@media (max-width: 500px) { .rating-summary { flex-direction: column; } }
+.rating-big { text-align: center; flex-shrink: 0; }
+.rating-big .number { font-family: var(--font-display); font-size: 48px; font-weight: 700; line-height: 1; color: var(--accent); }
+.rating-big .stars { color: var(--accent); font-size: 18px; margin-top: 4px; }
+.rating-big .count { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.rating-bars { flex: 1; min-width: 0; }
+.rating-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 12px; }
+.rating-bar-label { width: 20px; text-align: right; color: var(--muted); }
+.rating-bar-track { flex: 1; height: 8px; background: oklch(93% 0.01 80); border-radius: 4px; overflow: hidden; }
+.rating-bar-fill { height: 100%; background: var(--accent); border-radius: 4px; }
+.rating-bar-count { width: 24px; color: var(--muted); }
+
+/* Review list */
+.review-list { display: flex; flex-direction: column; gap: 16px; }
+.review-card { padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+.merchant-reply { margin-top: 10px; padding: 10px 14px; background: oklch(97% 0.02 35 / 0.5); border-inline-start: 3px solid var(--accent); border-radius: 0 6px 6px 0; font-size: 13px; }
+.merchant-reply-label { font-size: 11px; color: var(--accent); font-weight: 500; margin-bottom: 4px; }
+.review-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.review-stars { color: var(--accent); font-size: 14px; }
+.review-date { font-size: 11px; color: var(--muted); margin-inline-start: auto; }
+.review-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.review-tag { font-size: 11px; padding: 2px 8px; border-radius: 12px; }
+.review-tag.pos { background: oklch(95% 0.05 145 / 0.15); color: var(--success); }
+.review-tag.neg { background: oklch(95% 0.05 25 / 0.15); color: var(--danger); }
+.review-content { font-size: 14px; line-height: 1.6; color: var(--fg); }
+.review-empty { text-align: center; padding: 32px; color: var(--muted); font-size: 14px; }
+
+/* Review form */
+.review-form { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 24px; }
+.review-form h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+.form-row { margin-bottom: 16px; }
+.form-label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+.form-input, .form-textarea {
+  width: 100%; min-height: 44px; padding: 10px 14px; font-size: 16px; font-family: var(--font-body);
+  border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--fg); outline: none;
+}
+.form-input:focus, .form-textarea:focus { border-color: var(--accent); }
+.form-textarea { resize: vertical; min-height: 80px; }
+.star-input { display: flex; gap: 4px; font-size: 28px; cursor: pointer; }
+.star-input span { color: oklch(85% 0.01 80); transition: color .1s; }
+.star-input span.active { color: var(--accent); }
+.star-input span:hover, .star-input span:hover ~ span { color: var(--accent); }
+.tag-select { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag-option {
+  font-size: 12px; padding: 5px 12px; border-radius: 16px;
+  border: 1px solid var(--border); background: var(--bg); color: var(--muted);
+  cursor: pointer; transition: all .15s; user-select: none;
+}
+.tag-option.selected { border-color: var(--accent); background: oklch(95% 0.04 35 / 0.15); color: var(--accent); }
+.tag-option.neg.selected { border-color: var(--danger); background: oklch(95% 0.04 25 / 0.15); color: var(--danger); }
+.submit-btn {
+  min-height: 44px; padding: 0 24px; background: var(--accent); color: var(--surface);
+  border: none; border-radius: 6px; font-size: 14px; font-weight: 500;
+  cursor: pointer; font-family: var(--font-body); transition: opacity .15s;
+}
+.submit-btn:hover { opacity: 0.88; }
+.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.form-msg { font-size: 13px; margin-top: 8px; }
+.form-msg.success { color: var(--success); }
+.form-msg.error { color: var(--danger); }
+.back-link { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--accent); text-decoration: none; margin-bottom: 24px; }
+.back-link:hover { text-decoration: underline; }
+.site-footer { border-top: 1px solid var(--border); padding: 24px; text-align: center; font-size: 12px; color: var(--muted); margin-top: 48px; }
+.sticky-action {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 80; display: none;
+  background: oklch(99% 0.005 80 / 0.96); border-top: 1px solid var(--border);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  padding: 10px 24px;
+}
+.sticky-action.show { display: block; }
+.sticky-inner { max-width: 800px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+.sticky-copy { min-width: 0; flex: 1; }
+.sticky-copy strong { display: block; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sticky-copy span { display: block; color: var(--muted); font-size: 12px; }
+@media (max-width: 520px) {
+  .sticky-action { padding: 10px 16px; }
+  .sticky-inner { align-items: stretch; }
+  .sticky-copy { display: none; }
+  .sticky-inner .cta-btn { flex: 1; }
+}
+</style>
+</head>
+<body>
+<nav class="topnav">
+  <a href="index.html" class="brand"><img src="/logos/site-logo.png" alt="" />中转<span>导航</span></a>
+  <div class="nav-links">
+    <a href="index.html">首页</a>
+    <a href="submit.html">提交商家</a>
+  </div>
+</nav>
+<div class="container" id="mainContainer">
+  <div class="loading" id="loadingView">加载中…</div>
+  <div class="error-view" id="errorView" style="display:none;">
+    <h2>商家不存在</h2>
+    <p>该商家已下线或链接有误</p>
+    <a href="index.html" class="cta-btn">返回首页</a>
+  </div>
+  <div id="contentView" style="display:none;">
+    <a href="index.html" class="back-link">← 返回列表</a>
+    <div class="provider-header" id="providerHeader"></div>
+    <div class="section">
+      <div class="section-title">关键数据</div>
+      <div class="stats-grid" id="statsGrid"></div>
+    </div>
+    <div class="section" id="pricingSection" style="display:none;">
+      <div class="section-title">定价与倍率</div>
+      <div id="pricingBody"></div>
+    </div>
+    <div class="section" id="monitorSection" style="display:none;">
+      <div class="section-title">服务状态监测</div>
+      <div id="monitorBody"></div>
+    </div>
+    <div class="section">
+      <div class="section-title">服务信息</div>
+      <div class="info-grid" id="infoGrid"></div>
+    </div>
+    <div class="section">
+      <div class="section-title">网站存活状态</div>
+      <div id="siteStatusBody"></div>
+    </div>
+    <div class="section">
+      <div class="section-title">支持模型</div>
+      <div class="tag-list" id="modelTags"></div>
+    </div>
+    <div class="section" id="featureSection" style="display:none;">
+      <div class="section-title">核心特性</div>
+      <ul class="feature-list" id="featureList"></ul>
+    </div>
+    <div class="section" id="ctaSection" style="display:none;">
+      <a href="#" class="cta-btn" id="ctaLink" target="_blank" rel="noopener">访问官网</a>
+    </div>
+    <div class="section">
+      <div class="section-title">用户评价</div>
+      <div class="rating-summary" id="ratingSummary"></div>
+      <div class="review-list" id="reviewList"></div>
+    </div>
+    <div class="section">
+      <div class="review-form" id="reviewForm">
+        <h3>发表评价</h3>
+        <div class="form-row">
+          <label class="form-label">评分</label>
+          <div class="star-input" id="starInput">
+            <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">选择标签 <span style="font-weight:400;color:var(--muted);font-size:12px;">最多5个</span></label>
+          <div class="tag-select" id="tagSelect"></div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">评价内容 <span style="font-weight:400;color:var(--muted);font-size:12px;">选填，200字以内</span></label>
+          <textarea class="form-textarea" id="reviewContent" maxlength="200" placeholder="分享你的使用体验…"></textarea>
+        </div>
+        <div class="form-row">
+          <label class="form-label">邮箱 <span style="font-weight:400;color:var(--muted);font-size:12px;">用于防重复，不会公开</span></label>
+          <input class="form-input" type="email" id="reviewEmail" placeholder="your@email.com" />
+        </div>
+        <button class="submit-btn" id="submitReviewBtn">提交评价</button>
+        <div class="form-msg" id="formMsg"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<footer class="site-footer">数据仅供参考，请以商家官网为准。</footer>
+<div class="sticky-action" id="stickyAction">
+  <div class="sticky-inner">
+    <div class="sticky-copy"><strong id="stickyName"></strong><span id="stickyMeta"></span></div>
+    <a href="#reviewForm" class="secondary-btn" id="stickyReviewLink">写评价</a>
+    <a href="#" class="cta-btn" id="stickyCtaLink" target="_blank" rel="noopener">访问官网</a>
+  </div>
+</div>
+<script src="config.js"></script>
+<script>
+const API_BASE = window.API_BASE || '';
+const REVIEW_TAGS = window.REVIEW_TAGS || { positive: [], negative: [] };
+const params = new URLSearchParams(window.location.search);
+const providerId = params.get('id');
+let provider = null;
+let selectedScore = 0;
+let selectedTags = [];
+let reviews = [];
+
+function calcAgeMonths(foundedAt) {
+  if (!foundedAt) return 0;
+  const parts = foundedAt.split('-');
+  const y = parseInt(parts[0]); const m = parts.length > 1 ? parseInt(parts[1]) : 1;
+  if (!y) return 0;
+  const now = new Date();
+  return (now.getFullYear() - y) * 12 + (now.getMonth() + 1 - m);
+}
+function fmtAge(foundedAt) {
+  const months = calcAgeMonths(foundedAt);
+  if (!months) return '—';
+  if (months >= 24) return (months / 12).toFixed(1).replace(/\.0$/, '') + ' 年';
+  return months + ' 个月';
+}
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+function starsHtml(score) { return '★'.repeat(score) + '☆'.repeat(5 - score); }
+function renderSiteStatus() {
+  const status = ['ok', 'error', 'unknown'].includes(provider.site_status) ? provider.site_status : 'unknown';
+  const labels = { ok: '网站正常', error: '网站异常', unknown: '未检查' };
+  const details = [];
+  if (provider.site_checked_at) details.push('检查时间：' + esc(provider.site_checked_at));
+  if (provider.site_status_code) details.push('状态码：' + esc(String(provider.site_status_code)));
+  if (provider.site_latency_ms) details.push('耗时：' + esc(String(provider.site_latency_ms)) + 'ms');
+  if (provider.site_error) details.push('说明：' + esc(provider.site_error));
+  document.getElementById('siteStatusBody').innerHTML = `
+    <div class="site-status-card">
+      <div class="site-status-main ${status}"><span class="site-status-dot"></span>${labels[status]}</div>
+      <div class="site-status-meta">${details.length ? details.join('<br>') : '每日自动检查，暂无记录'}</div>
+    </div>
+  `;
+}
+
+async function loadProvider() {
+  if (!providerId) { showError(); return; }
+  try {
+    const [provRes, monRes] = await Promise.all([
+      fetch(API_BASE + '/api/providers/' + encodeURIComponent(providerId)),
+      fetch(API_BASE + '/api/providers/' + encodeURIComponent(providerId) + '/monitoring')
+    ]);
+    if (!provRes.ok) { showError(); return; }
+    const data = await provRes.json();
+    provider = data.provider;
+    if (!provider) { showError(); return; }
+    document.title = provider.name + ' — 中转导航';
+    const descMeta = document.querySelector('meta[name="description"]');
+    if (descMeta) { const models = (provider.supported_models || provider.brands || []).slice(0, 3).join('、'); descMeta.content = `${provider.name} - ${provider.category || 'API中转'}，${provider.avg_rating > 0 ? '评分' + provider.avg_rating + '分，' : ''}支持${models}等模型。查看倍率定价与可用率监测。`; }
+    const ogTitle = document.querySelector('meta[property="og:title"]') || (() => { const m = document.createElement('meta'); m.setAttribute('property', 'og:title'); document.head.appendChild(m); return m; })();
+    ogTitle.content = provider.name + ' - 中转导航';
+    const ld = document.createElement('script');
+    ld.type = 'application/ld+json';
+    ld.textContent = JSON.stringify({"@context":"https://schema.org","@type":"LocalBusiness","name":provider.name,"description":provider.desc||'',"url":provider.url||'',"aggregateRating": provider.review_count > 0 ? {"@type":"AggregateRating","ratingValue":provider.avg_rating,"reviewCount":provider.review_count} : undefined});
+    document.head.appendChild(ld);
+    renderProvider();
+    let mon = null;
+    try { mon = await monRes.json(); } catch {}
+    renderMonitoring(mon);
+    await loadReviews();
+  } catch { showError(); }
+}
+
+function showError() {
+  document.getElementById('loadingView').style.display = 'none';
+  document.getElementById('errorView').style.display = 'block';
+}
+
+function renderProvider() {
+  document.getElementById('loadingView').style.display = 'none';
+  document.getElementById('contentView').style.display = 'block';
+  const p = provider;
+  const age = fmtAge(p.founded_at);
+  const models = (p.supported_models && p.supported_models.length) ? p.supported_models : p.brands;
+  const billingLabels = { pay_as_you_go: '按量计费', subscription: '包月/包年', free: '免费', enterprise: '企业定制' };
+  const hasUrl = p.url && p.url !== '#';
+  const ctaHref = API_BASE + '/api/redirect/' + p.id;
+  const logoHtml = p.logo_url
+    ? `<div class="provider-logo"><img src="${(p.logo_url.startsWith('/') || p.logo_url.startsWith('http')) ? p.logo_url : API_BASE + '/api/logo/' + p.id}" alt="${esc(p.name)}" style="width:72px;height:72px;border-radius:12px;object-fit:cover;" onerror="this.parentElement.innerHTML='<div class=\\'provider-logo\\' style=\\'background:${p.color}\\'>${p.name[0]}</div>'" /></div>`
+    : `<div class="provider-logo" style="background:${p.color}">${p.name[0]}</div>`;
+  document.getElementById('providerHeader').innerHTML = `${logoHtml}<div class="provider-info"><h1>${esc(p.name)}</h1><div class="provider-meta">${p.category ? `<span>${esc(p.category)}</span>` : ''}${p.founded_at ? `<span>运营 ${age}</span>` : ''}${p.target_audience ? `<span>面向 ${esc(p.target_audience)}</span>` : ''}</div><div class="provider-actions">${hasUrl ? `<a href="${ctaHref}" class="cta-btn" target="_blank" rel="noopener">访问官网</a>` : ''}<a href="#reviewForm" class="secondary-btn">写评价</a></div></div>`;
+  const planCount = (p.pricing_plans || []).length;
+  document.getElementById('statsGrid').innerHTML = `<div class="stat-card"><span class="stat-val">${models.length}</span><span class="stat-label">支持模型</span></div><div class="stat-card"><span class="stat-val">${age || '—'}</span><span class="stat-label">运营时长</span></div><div class="stat-card"><span class="stat-val">${p.avg_rating > 0 ? p.avg_rating.toFixed(1) : '—'}</span><span class="stat-label">用户评分</span></div><div class="stat-card"><span class="stat-val">${planCount || p.favorite_count || 0}</span><span class="stat-label">${planCount ? '定价套餐' : '收藏数'}</span></div>`;
+  const billing = p.billing_type ? billingLabels[p.billing_type] || p.billing_type : '未设置';
+  document.getElementById('infoGrid').innerHTML = `<div class="info-item"><span class="label">计费方式</span><span class="value">${billing}</span></div><div class="info-item"><span class="label">目标用户</span><span class="value">${esc(p.target_audience) || '通用'}</span></div><div class="info-item"><span class="label">输入价格</span><span class="value">${esc(p.input_price) || '—'}/M tokens</span></div><div class="info-item"><span class="label">输出价格</span><span class="value">${esc(p.output_price) || '—'}/M tokens</span></div>${p.free_quota ? '<div class="info-item"><span class="label">免费额度</span><span class="value" style="color:var(--success)">有</span></div>' : ''}`;
+  renderSiteStatus();
+  document.getElementById('modelTags').innerHTML = models.map(m => `<span class="tag">${esc(m)}</span>`).join('');
+  if (p.features && p.features.length) {
+    document.getElementById('featureSection').style.display = 'block';
+    document.getElementById('featureList').innerHTML = p.features.map(f => `<li>${esc(f)}</li>`).join('');
+  }
+  if (hasUrl) {
+    document.getElementById('ctaSection').style.display = 'block';
+    document.getElementById('ctaLink').href = ctaHref;
+  }
+  updateStickyAction(hasUrl, ctaHref, billing);
+  renderPricing(p.pricing_plans);
+}
+
+function updateStickyAction(hasUrl, ctaHref, billing) {
+  const bar = document.getElementById('stickyAction');
+  if (!provider) return;
+  document.getElementById('stickyName').textContent = provider.name || '商家详情';
+  document.getElementById('stickyMeta').textContent = [billing, provider.avg_rating > 0 ? provider.avg_rating.toFixed(1) + ' 分' : null].filter(Boolean).join(' · ');
+  document.getElementById('stickyCtaLink').href = hasUrl ? ctaHref : '#reviewForm';
+  document.getElementById('stickyCtaLink').textContent = hasUrl ? '访问官网' : '查看评价';
+  document.getElementById('stickyCtaLink').target = hasUrl ? '_blank' : '';
+  bar.classList.add('show');
+}
+
+/* Pricing plans (PriceAI style) */
+function renderPricing(plans) {
+  const sec = document.getElementById('pricingSection');
+  const body = document.getElementById('pricingBody');
+  if (!plans || !plans.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  const groupsMap = {};
+  plans.forEach(pl => {
+    const fam = pl.family || pl.group_name || '其他';
+    if (!groupsMap[fam]) groupsMap[fam] = [];
+    groupsMap[fam].push(pl);
+  });
+  body.innerHTML = Object.keys(groupsMap).map(fam => {
+    const groups = groupsMap[fam];
+    const mults = groups.map(g => g.multiplier).filter(m => m > 0);
+    const minMult = mults.length ? Math.min(...mults) : 0;
+    const multText = minMult > 0 ? minMult.toFixed(2) + '×' : (groups.some(g => g.fixed_price) ? '固定价' : '—');
+    const modelsAll = [...new Set(groups.flatMap(g => g.models || []))];
+    const notes = groups.filter(g => g.note).map(g => g.note);
+    return `
+    <div class="family-card">
+      <div class="family-head">
+        <h3>${esc(fam)}</h3>
+        <div class="family-mult">综合倍率 <b>${multText}</b> · ${groups.length} 分组</div>
+      </div>
+      <div class="price-scroll"><table class="price-table">
+        <thead><tr><th>分组</th><th>输入</th><th>输出</th><th>缓存写</th><th>缓存读</th><th>缓存命中</th><th>可用率</th><th>延迟</th></tr></thead>
+        <tbody>
+          ${groups.map(g => `<tr>
+            <td>${esc(g.group_name || '—')}${g.fixed_price ? `<br><span class="fixed">${esc(g.fixed_price)}</span>` : ''}${g.recharge_multiplier && g.recharge_multiplier !== 1 ? `<br><span style="font-size:10px;color:var(--muted);">充值 ${g.recharge_multiplier}×</span>` : ''}</td>
+            <td>${g.input_price ? esc(g.input_price) : '—'}</td>
+            <td>${g.output_price ? esc(g.output_price) : '—'}</td>
+            <td>${g.cache_write_price ? esc(g.cache_write_price) : '—'}</td>
+            <td>${g.cache_read_price ? esc(g.cache_read_price) : '—'}</td>
+            <td>${g.cache_hit_rate ? g.cache_hit_rate + '%' : '—'}</td>
+            <td>${g.availability ? g.availability + '%' : '—'}</td>
+            <td>${g.latency_recent ? g.latency_recent + 's' : '—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>
+      ${modelsAll.length ? `<div style="margin-top:8px;font-size:12px;color:var(--muted);">模型：${modelsAll.map(esc).join('、')}</div>` : ''}
+      ${notes.length ? `<div style="margin-top:6px;font-size:12px;color:var(--muted);">${esc(notes.join('；'))}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+/* Monitoring */
+function renderMonitoring(data) {
+  const sec = document.getElementById('monitorSection');
+  const body = document.getElementById('monitorBody');
+  if (!data) { sec.style.display = 'none'; return; }
+  const { overall, by_family, timeline } = data;
+  if (!overall && (!by_family || !by_family.length)) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  const ov = overall || {};
+  const stats = [
+    { v: (ov.availability || 0) + '%', l: '整体可用率' },
+    { v: (ov.sample_count || 0), l: '监测样本' },
+    { v: (ov.latency_7d || 0) + 's', l: '7日均延迟' },
+    { v: ov.checked_at ? String(ov.checked_at).slice(0, 16) : '—', l: '最近检查' }
+  ];
+  let html = `<div class="monitor-grid">${stats.map(s => `<div class="monitor-stat"><span class="v">${esc(String(s.v))}</span><span class="l">${s.l}</span></div>`).join('')}</div>`;
+  if (by_family && by_family.length) {
+    html += '<div class="monitor-sub">' + by_family.map(f => `<span class="monitor-chip">${esc(f.family || '整体')}：可用 <b>${f.availability || 0}%</b> · 延迟 ${f.latency_recent || 0}s</span>`).join('') + '</div>';
+  }
+  if (timeline && timeline.length) {
+    html += '<div class="timeline">' + timeline.slice(0, 12).map(t => `<div class="timeline-row"><span class="tl-family">${esc(t.family || '整体')}</span><span>可用 ${t.availability || 0}% · 延迟 ${t.latency_recent || 0}s · 缓存 ${t.cache_hit_rate || 0}%</span><span style="margin-inline-start:auto;">${esc(String(t.checked_at || '').slice(0, 16))}</span></div>`).join('') + '</div>';
+  }
+  html += '<div class="risk-note">⚠ <b>风险提示：</b>中转渠道上游构成不透明，可能包含非官方/逆向通道；首次使用建议小额测试。本页数据仅供参考，最终交易请在原平台完成。</div>';
+  body.innerHTML = html;
+}
+
+async function loadReviews() {
+  try {
+    const res = await fetch(API_BASE + '/api/reviews/' + encodeURIComponent(providerId));
+    const data = await res.json();
+    reviews = data.reviews || [];
+    renderReviewSection();
+  } catch { reviews = []; renderReviewSection(); }
+}
+
+function renderReviewSection() {
+  const total = reviews.length;
+  const avg = provider.avg_rating || 0;
+  const dist = [0, 0, 0, 0, 0];
+  reviews.forEach(r => { if (r.score >= 1 && r.score <= 5) dist[r.score - 1]++; });
+  const maxCount = Math.max(...dist, 1);
+  document.getElementById('ratingSummary').innerHTML = `<div class="rating-big"><div class="number">${avg > 0 ? avg.toFixed(1) : '—'}</div><div class="stars">${avg > 0 ? starsHtml(Math.round(avg)) : ''}</div><div class="count">${provider.review_count || 0} 条评价</div></div><div class="rating-bars">${[5,4,3,2,1].map(s => `<div class="rating-bar-row"><span class="rating-bar-label">${s}★</span><div class="rating-bar-track"><div class="rating-bar-fill" style="width:${(dist[s-1]/maxCount*100).toFixed(0)}%"></div></div><span class="rating-bar-count">${dist[s-1]}</span></div>`).join('')}</div>`;
+  if (total === 0) {
+    document.getElementById('reviewList').innerHTML = '<div class="review-empty">暂无评价，成为第一个评价者吧</div>';
+    return;
+  }
+  document.getElementById('reviewList').innerHTML = reviews.map(r => {
+    const posTags = (r.tags || []).filter(t => REVIEW_TAGS.positive.includes(t));
+    const negTags = (r.tags || []).filter(t => REVIEW_TAGS.negative.includes(t));
+    return `<div class="review-card"><div class="review-head"><span class="review-stars">${starsHtml(r.score)}</span><span class="review-date">${r.created_at || ''}</span></div>${r.tags.length ? `<div class="review-tags">${posTags.map(t => `<span class="review-tag pos">${esc(t)}</span>`).join('')}${negTags.map(t => `<span class="review-tag neg">${esc(t)}</span>`).join('')}</div>` : ''}${r.content ? `<div class="review-content">${esc(r.content)}</div>` : ''}${r.merchant_reply ? `<div class="merchant-reply"><div class="merchant-reply-label">商家回复</div>${esc(r.merchant_reply)}</div>` : ''}</div>`;
+  }).join('');
+}
+
+/* Star input */
+document.querySelectorAll('#starInput span').forEach(el => {
+  el.addEventListener('click', () => {
+    selectedScore = parseInt(el.dataset.v);
+    document.querySelectorAll('#starInput span').forEach(s => s.classList.toggle('active', parseInt(s.dataset.v) <= selectedScore));
+  });
+  el.addEventListener('mouseenter', () => {
+    const v = parseInt(el.dataset.v);
+    document.querySelectorAll('#starInput span').forEach(s => { s.style.color = parseInt(s.dataset.v) <= v ? 'var(--accent)' : ''; });
+  });
+});
+document.getElementById('starInput').addEventListener('mouseleave', () => {
+  document.querySelectorAll('#starInput span').forEach(s => { s.style.color = ''; s.classList.toggle('active', parseInt(s.dataset.v) <= selectedScore); });
+});
+
+/* Tag select */
+function renderTagSelect() {
+  const all = [
+    ...REVIEW_TAGS.positive.map(t => ({ text: t, type: 'pos' })),
+    ...REVIEW_TAGS.negative.map(t => ({ text: t, type: 'neg' }))
+  ];
+  document.getElementById('tagSelect').innerHTML = all.map(t =>
+    `<span class="tag-option ${t.type} ${selectedTags.includes(t.text) ? 'selected' : ''}" data-tag="${esc(t.text)}">${esc(t.text)}</span>`
+  ).join('');
+  document.querySelectorAll('#tagSelect .tag-option').forEach(el => {
+    el.addEventListener('click', () => {
+      const tag = el.dataset.tag;
+      if (selectedTags.includes(tag)) { selectedTags = selectedTags.filter(t => t !== tag); }
+      else if (selectedTags.length < 5) { selectedTags.push(tag); }
+      renderTagSelect();
+    });
+  });
+}
+renderTagSelect();
+
+/* Submit review */
+document.getElementById('submitReviewBtn').addEventListener('click', async () => {
+  const email = document.getElementById('reviewEmail').value.trim();
+  const content = document.getElementById('reviewContent').value.trim();
+  const msg = document.getElementById('formMsg');
+  if (!selectedScore) { msg.className = 'form-msg error'; msg.textContent = '请选择评分'; return; }
+  if (!email || !email.includes('@')) { msg.className = 'form-msg error'; msg.textContent = '请填写有效邮箱'; return; }
+  const btn = document.getElementById('submitReviewBtn');
+  btn.disabled = true; btn.textContent = '提交中…';
+  msg.className = 'form-msg'; msg.textContent = '';
+  try {
+    const res = await fetch(API_BASE + '/api/reviews/' + encodeURIComponent(providerId), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ score: selectedScore, tags: selectedTags, content, email })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      msg.className = 'form-msg success'; msg.textContent = data.message || '评价提交成功';
+      selectedScore = 0; selectedTags = []; document.getElementById('reviewContent').value = ''; document.getElementById('reviewEmail').value = '';
+      document.querySelectorAll('#starInput span').forEach(s => s.classList.remove('active'));
+      renderTagSelect();
+    } else { msg.className = 'form-msg error'; msg.textContent = data.error || '提交失败'; }
+  } catch { msg.className = 'form-msg error'; msg.textContent = '网络错误，请稍后重试'; }
+  btn.disabled = false; btn.textContent = '提交评价';
+});
+
+loadProvider();
+</script>
+</body>
+</html>

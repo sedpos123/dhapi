@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>商家后台 — 中转导航</title>
+<style>
+:root {
+  --bg:      oklch(97% 0.012 80);
+  --surface: oklch(99% 0.005 80);
+  --fg:      oklch(20% 0.02 60);
+  --muted:   oklch(48% 0.015 60);
+  --border:  oklch(89% 0.012 80);
+  --accent:  oklch(58% 0.16 35);
+  --success: oklch(62% 0.17 145);
+  --warn:    oklch(75% 0.16 85);
+  --danger:  oklch(55% 0.2 25);
+  --font-display: 'Iowan Old Style', 'Charter', Georgia, serif;
+  --font-body:    -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono:    ui-monospace, 'JetBrains Mono', Menlo, monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); line-height: 1.5; min-height: 100vh; }
+
+/* === LOGIN SCREEN === */
+.login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+.login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 36px; max-width: 420px; width: 100%; }
+.login-card h1 { font-family: var(--font-display); font-size: 24px; margin-bottom: 4px; }
+.login-card h1 span { color: var(--accent); }
+.login-card .login-sub { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+.login-tabs { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+.login-tab { padding: 8px 16px; font-size: 14px; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; transition: all .15s; user-select: none; }
+.login-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; font-size: 14px; font-family: var(--font-body); border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--fg); outline: none; transition: border-color .15s; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); }
+.form-group textarea { resize: vertical; min-height: 80px; }
+.btn-primary { width: 100%; padding: 12px; background: var(--accent); color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: opacity .15s; }
+.btn-primary:hover { opacity: .9; }
+.login-msg { font-size: 13px; margin-top: 12px; text-align: center; }
+.login-msg.error { color: var(--danger); }
+.login-msg.success { color: var(--success); }
+.login-back { display: block; text-align: center; margin-top: 16px; font-size: 12px; color: var(--muted); text-decoration: none; }
+.login-back:hover { color: var(--accent); }
+
+/* === DASHBOARD LAYOUT === */
+.app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+@media (max-width: 860px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .mobile-tab-bar { display: flex !important; }
+}
+.sidebar { background: var(--surface); border-inline-end: 1px solid var(--border); padding: 20px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.sidebar-brand { padding: 0 20px 16px; border-bottom: 1px solid var(--border); font-family: var(--font-display); font-size: 18px; font-weight: 600; }
+.sidebar-brand span { color: var(--accent); }
+.sidebar-brand small { display: block; font-family: var(--font-mono); font-size: 10px; color: var(--muted); font-weight: 400; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 2px; }
+.nav-tabs { padding: 12px 0; }
+.nav-tab { display: flex; align-items: center; gap: 10px; padding: 10px 20px; font-size: 13px; cursor: pointer; color: var(--muted); transition: all .15s; user-select: none; }
+.nav-tab:hover { color: var(--fg); }
+.nav-tab.active { color: var(--accent); background: oklch(95% 0.03 35); border-inline-start: 3px solid var(--accent); }
+.nav-tab .tab-icon { width: 18px; text-align: center; }
+.sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); margin-top: auto; }
+.sidebar-footer a { font-size: 12px; color: var(--muted); text-decoration: none; display: block; padding: 4px 0; }
+.sidebar-footer a:hover { color: var(--accent); }
+.mobile-tab-bar { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); padding: 6px 0; z-index: 100; justify-content: space-around; }
+.mobile-tab-bar button { background: none; border: none; font-size: 11px; color: var(--muted); cursor: pointer; padding: 4px 8px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.mobile-tab-bar button.active { color: var(--accent); }
+
+/* === MAIN CONTENT === */
+.main-content { padding: 28px 32px; overflow-y: auto; }
+@media (max-width: 860px) { .main-content { padding: 20px 16px 80px; } }
+.page-title { font-family: var(--font-display); font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+.page-desc { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* === STAT CARDS === */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; margin-bottom: 28px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 18px; }
+.stat-val { font-family: var(--font-display); font-size: 28px; font-weight: 600; color: var(--fg); letter-spacing: -0.01em; }
+.stat-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* === FORM === */
+.form-section { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 24px; margin-bottom: 20px; }
+.form-section h3 { font-size: 15px; font-weight: 600; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+.form-group.checkbox-group { display: flex; align-items: center; gap: 8px; }
+.form-group.checkbox-group input { width: auto; }
+.brand-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.brand-chip { padding: 5px 12px; border: 1px solid var(--border); border-radius: 20px; font-size: 12px; cursor: pointer; transition: all .15s; user-select: none; }
+.brand-chip.selected { border-color: var(--accent); color: var(--accent); background: oklch(97% 0.02 35); }
+.btn { padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--fg); transition: all .15s; }
+.btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn.primary:hover { opacity: .9; }
+.btn.danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+.btn.sm { padding: 5px 12px; font-size: 12px; }
+
+/* === REVIEW CARDS === */
+.review-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+.review-stars { color: var(--accent); font-size: 14px; }
+.review-status { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 500; }
+.review-status.pending { background: oklch(95% 0.06 85); color: var(--warn); }
+.review-status.approved { background: oklch(95% 0.04 145); color: var(--success); }
+.review-status.rejected { background: oklch(95% 0.04 25); color: var(--danger); }
+.review-tags { display: flex; gap: 4px; flex-wrap: wrap; margin: 6px 0; }
+.review-tag { font-size: 11px; padding: 2px 8px; border-radius: 99px; background: var(--border); color: var(--muted); }
+.review-reply { margin-top: 10px; padding: 10px 14px; background: oklch(97% 0.02 35 / 0.5); border-inline-start: 3px solid var(--accent); border-radius: 0 6px 6px 0; font-size: 13px; }
+.review-reply-label { font-size: 11px; color: var(--accent); font-weight: 500; margin-bottom: 4px; }
+.reply-input { width: 100%; padding: 8px 10px; font-size: 13px; font-family: var(--font-body); border: 1px solid var(--border); border-radius: 6px; background: var(--bg); outline: none; resize: vertical; min-height: 60px; margin-top: 8px; }
+
+/* === TOAST === */
+.toast { position: fixed; top: 20px; right: 20px; padding: 10px 20px; border-radius: 8px; font-size: 13px; color: #fff; background: var(--fg); z-index: 999; animation: toastIn .3s; }
+.toast.error { background: var(--danger); }
+.toast.success { background: var(--success); }
+@keyframes toastIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <h1>商家<span>后台</span></h1>
+    <p class="login-sub">管理您的商家信息和用户评价</p>
+    <div class="login-tabs">
+      <div class="login-tab active" id="tabLogin" onclick="switchLoginTab('login')">登录</div>
+      <div class="login-tab" id="tabRegister" onclick="switchLoginTab('register')">注册</div>
+    </div>
+    <!-- Login Form -->
+    <div id="loginForm">
+      <div class="form-group"><label>邮箱</label><input type="email" id="loginEmail" placeholder="your@email.com" /></div>
+      <div class="form-group"><label>密码</label><input type="password" id="loginPassword" placeholder="至少 8 位" /></div>
+      <button class="btn-primary" onclick="doLogin()">登录</button>
+      <div class="login-msg" id="loginMsg"></div>
+    </div>
+    <!-- Register Form -->
+    <div id="registerForm" style="display:none">
+      <div class="form-group"><label>邮箱</label><input type="email" id="regEmail" placeholder="your@email.com" /></div>
+      <div class="form-group"><label>密码</label><input type="password" id="regPassword" placeholder="至少 8 位" /></div>
+      <div class="form-group"><label>认领商家</label><select id="regProvider"><option value="">加载中...</option></select></div>
+      <button class="btn-primary" onclick="doRegister()">注册申请</button>
+      <div class="login-msg" id="regMsg"></div>
+    </div>
+    <a href="index.html" class="login-back">← 返回首页</a>
+  </div>
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<div class="app" id="dashApp" style="display:none">
+  <aside class="sidebar">
+    <div class="sidebar-brand">商家<span>后台</span><small>Merchant Dashboard</small></div>
+    <div class="nav-tabs">
+      <div class="nav-tab active" data-tab="overview"><span class="tab-icon">◉</span> 概览</div>
+      <div class="nav-tab" data-tab="edit"><span class="tab-icon">▤</span> 商家信息</div>
+      <div class="nav-tab" data-tab="reviews"><span class="tab-icon">★</span> 评价管理</div>
+    </div>
+    <div class="sidebar-footer">
+      <a href="index.html">← 返回首页</a>
+      <a href="javascript:void(0)" onclick="doLogout()">退出登录</a>
+    </div>
+  </aside>
+  <div class="mobile-tab-bar" style="display:none">
+    <button class="active" data-tab="overview">◉<br>概览</button>
+    <button data-tab="edit">▤<br>信息</button>
+    <button data-tab="reviews">★<br>评价</button>
+  </div>
+  <div class="main-content">
+
+    <!-- TAB: Overview -->
+    <div class="tab-content active" id="tab-overview">
+      <h2 class="page-title" id="overviewTitle">概览</h2>
+      <p class="page-desc">您的商家运营数据一览</p>
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><span class="stat-val">—</span><span class="stat-label">加载中</span></div>
+      </div>
+    </div>
+
+    <!-- TAB: Edit Provider -->
+    <div class="tab-content" id="tab-edit">
+      <h2 class="page-title">商家信息</h2>
+      <p class="page-desc">修改后直接生效，无需审核</p>
+      <div id="editFormContainer"><p style="color:var(--muted);">加载中...</p></div>
+    </div>
+
+    <!-- TAB: Reviews -->
+    <div class="tab-content" id="tab-reviews">
+      <h2 class="page-title">评价管理</h2>
+      <p class="page-desc">查看用户评价并回复</p>
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button class="btn sm primary" id="revFilterAll" onclick="loadMerchantReviews('')">全部</button>
+        <button class="btn sm" id="revFilterPending" onclick="loadMerchantReviews('pending')">待审核</button>
+        <button class="btn sm" id="revFilterApproved" onclick="loadMerchantReviews('approved')">已通过</button>
+        <button class="btn sm" id="revFilterRejected" onclick="loadMerchantReviews('rejected')">已拒绝</button>
+      </div>
+      <div id="reviewList"></div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toastContainer"></div>
+
+<script src="config.js"></script>
+<script>
+const API_BASE = window.API_BASE || '';
+let merchantToken = sessionStorage.getItem('merchant_token');
+let providerId = '';
+let allBrands = [];
+let allCategories = [];
+
+/* ========== HELPERS ========== */
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function toast(msg, type) {
+  const el = document.createElement('div');
+  el.className = 'toast' + (type ? ' ' + type : '');
+  el.textContent = msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+async function api(url, options = {}) {
+  const headers = { 'Content-Type': 'application/json', ...options.headers };
+  if (merchantToken) headers['Authorization'] = 'Bearer ' + merchantToken;
+  const res = await fetch(API_BASE + url, { ...options, headers });
+  if (res.status === 401) { doLogout(); throw new Error('Unauthorized'); }
+  return res;
+}
+
+/* ========== LOGIN/REGISTER ========== */
+function switchLoginTab(tab) {
+  document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+  document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+  document.getElementById('loginForm').style.display = tab === 'login' ? '' : 'none';
+  document.getElementById('registerForm').style.display = tab === 'register' ? '' : 'none';
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const msg = document.getElementById('loginMsg');
+  msg.className = 'login-msg'; msg.textContent = '';
+  if (!email || !password) { msg.className = 'login-msg error'; msg.textContent = '请填写邮箱和密码'; return; }
+  try {
+    const res = await fetch(API_BASE + '/api/merchant/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+    const data = await res.json();
+    if (!res.ok) { msg.className = 'login-msg error'; msg.textContent = data.error || '登录失败'; return; }
+    merchantToken = data.token;
+    providerId = data.provider_id;
+    sessionStorage.setItem('merchant_token', merchantToken);
+    showDashboard();
+  } catch { msg.className = 'login-msg error'; msg.textContent = '网络错误'; }
+}
+
+async function doRegister() {
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const pid = document.getElementById('regProvider').value;
+  const msg = document.getElementById('regMsg');
+  msg.className = 'login-msg'; msg.textContent = '';
+  if (!email || !password || !pid) { msg.className = 'login-msg error'; msg.textContent = '请填写所有字段'; return; }
+  try {
+    const res = await fetch(API_BASE + '/api/merchant/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, provider_id: pid }) });
+    const data = await res.json();
+    if (!res.ok) { msg.className = 'login-msg error'; msg.textContent = data.error || '注册失败'; return; }
+    msg.className = 'login-msg success'; msg.textContent = data.message || '注册成功，请等待管理员审核后登录';
+  } catch { msg.className = 'login-msg error'; msg.textContent = '网络错误'; }
+}
+
+function doLogout() {
+  merchantToken = null;
+  sessionStorage.removeItem('merchant_token');
+  document.getElementById('loginScreen').style.display = '';
+  document.getElementById('dashApp').style.display = 'none';
+}
+
+/* ========== DASHBOARD ========== */
+async function showDashboard() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('dashApp').style.display = '';
+  await loadDashboard();
+  await loadProviderForEdit();
+  await loadMerchantReviews('');
+}
+
+async function loadDashboard() {
+  try {
+    const res = await api('/api/merchant/dashboard');
+    const data = await res.json();
+    const p = data.provider;
+    const s = data.stats;
+    document.getElementById('overviewTitle').textContent = p.name + ' — 概览';
+    document.getElementById('statsGrid').innerHTML = `
+      <div class="stat-card"><span class="stat-val">${s.click_count}</span><span class="stat-label">总点击量</span></div>
+      <div class="stat-card"><span class="stat-val">${s.favorite_count}</span><span class="stat-label">收藏数</span></div>
+      <div class="stat-card"><span class="stat-val">${s.avg_rating > 0 ? s.avg_rating.toFixed(1) + '★' : '—'}</span><span class="stat-label">平均评分</span></div>
+      <div class="stat-card"><span class="stat-val">${s.review_count}</span><span class="stat-label">评价总数</span></div>
+      <div class="stat-card"><span class="stat-val">${s.pending_review_count}</span><span class="stat-label">待审核评价</span></div>
+      <div class="stat-card"><span class="stat-val">${p.online ? '在线' : '下线'}</span><span class="stat-label">当前状态</span></div>
+    `;
+  } catch { toast('加载概览失败', 'error'); }
+}
+
+/* ========== TAB SWITCHING ========== */
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
+  document.querySelectorAll('.mobile-tab-bar button').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
+}
+document.querySelectorAll('.nav-tab').forEach(el => el.addEventListener('click', () => switchTab(el.dataset.tab)));
+document.querySelectorAll('.mobile-tab-bar button').forEach(el => el.addEventListener('click', () => switchTab(el.dataset.tab)));
+
+/* ========== PROVIDER EDIT ========== */
+async function loadProviderForEdit() {
+  try {
+    const [pRes, bRes, cRes] = await Promise.all([
+      api('/api/merchant/provider').then(r => r.json()),
+      fetch(API_BASE + '/api/brands').then(r => r.json()),
+      fetch(API_BASE + '/api/categories').then(r => r.json())
+    ]);
+    const p = pRes.provider;
+    providerId = p.id;
+    allBrands = (bRes.brands || []).map(b => b.name);
+    allCategories = (cRes.categories || []).map(c => c.name);
+    allCategoryObjs = cRes.categories || [];
+    const billingOptions = [['', '未设置'], ['pay_as_you_go', '按量计费'], ['subscription', '包月/包年'], ['free', '免费'], ['enterprise', '企业定制']];
+    const audienceOptions = ['', '通用', '个人开发者', '企业', '学生'];
+    document.getElementById('editFormContainer').innerHTML = `
+      <div class="form-section">
+        <h3>基本信息</h3>
+        <div class="form-row">
+          <div class="form-group"><label>商家名称</label><input id="editName" value="${esc(p.name)}" /></div>
+          <div class="form-group"><label>官网链接</label><input id="editUrl" value="${esc(p.url)}" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>分类</label><select id="editCategory">${allCategoryObjs.map(c => `<option value="${esc(c.name)}" ${c.name === p.category ? 'selected' : ''} data-desc="${esc(c.description || '')}">${esc(c.name)}</option>`).join('')}</select><p id="editCategoryHint" style="font-size:12px;color:#888;margin-top:6px;">${esc((allCategoryObjs.find(c => c.name === p.category) || {}).description || '')}</p></div>
+          <div class="form-group"><label>主题色</label><input id="editColor" type="color" value="${p.color || '#888888'}" /></div>
+        </div>
+        <div class="form-group"><label>简介</label><textarea id="editDesc">${esc(p.desc)}</textarea></div>
+        <div class="form-group"><label>成立时间</label><input id="editFounded" type="month" value="${p.founded_at || ''}" /></div>
+      </div>
+      <div class="form-section">
+        <h3>支持品牌/模型</h3>
+        <div class="brand-grid" id="brandGrid">${allBrands.map(b => `<span class="brand-chip ${p.brands.includes(b) ? 'selected' : ''}" onclick="this.classList.toggle('selected')">${esc(b)}</span>`).join('')}</div>
+      </div>
+      <div class="form-section">
+        <h3>价格与服务</h3>
+        <div class="form-row">
+          <div class="form-group"><label>输入价格 (/M tokens)</label><input id="editInputPrice" value="${esc(p.input_price)}" /></div>
+          <div class="form-group"><label>输出价格 (/M tokens)</label><input id="editOutputPrice" value="${esc(p.output_price)}" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>计费方式</label><select id="editBilling">${billingOptions.map(([v, l]) => `<option value="${v}" ${v === p.billing_type ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+          <div class="form-group"><label>目标用户</label><select id="editAudience">${audienceOptions.map(a => `<option value="${a}" ${a === p.target_audience ? 'selected' : ''}>${a || '未设置'}</option>`).join('')}</select></div>
+        </div>
+        <div class="form-group checkbox-group"><input type="checkbox" id="editFreeQuota" ${p.free_quota ? 'checked' : ''} /><label for="editFreeQuota">提供免费额度</label></div>
+      </div>
+      <div class="form-section">
+        <h3>核心特性</h3>
+        <div class="form-group"><label>特性标签（逗号分隔）</label><input id="editFeatures" value="${esc((p.features || []).join(', '))}" /></div>
+      </div>
+      <button class="btn primary" onclick="saveProvider()" style="margin-top:8px;">保存修改</button>
+    `;
+    // Category description hint on change
+    document.getElementById('editCategory').addEventListener('change', function() {
+      const desc = this.options[this.selectedIndex]?.getAttribute('data-desc') || '';
+      document.getElementById('editCategoryHint').textContent = desc;
+    });
+  } catch { toast('加载商家信息失败', 'error'); }
+}
+
+async function saveProvider() {
+  const brands = [];
+  document.querySelectorAll('#brandGrid .brand-chip.selected').forEach(el => brands.push(el.textContent));
+  const featuresStr = document.getElementById('editFeatures').value;
+  const features = featuresStr ? featuresStr.split(/[,，]/).map(s => s.trim()).filter(Boolean) : [];
+  const body = {
+    name: document.getElementById('editName').value.trim(),
+    url: document.getElementById('editUrl').value.trim(),
+    category: document.getElementById('editCategory').value,
+    color: document.getElementById('editColor').value,
+    desc: document.getElementById('editDesc').value.trim(),
+    founded_at: document.getElementById('editFounded').value,
+    input_price: document.getElementById('editInputPrice').value.trim(),
+    output_price: document.getElementById('editOutputPrice').value.trim(),
+    billing_type: document.getElementById('editBilling').value,
+    target_audience: document.getElementById('editAudience').value,
+    free_quota: document.getElementById('editFreeQuota').checked,
+    brands, features,
+    supported_models: brands,
+    logo_url: ''
+  };
+  if (!body.name || !body.desc) { toast('请填写名称和简介', 'error'); return; }
+  try {
+    const res = await api('/api/merchant/provider', { method: 'PUT', body: JSON.stringify(body) });
+    if (!res.ok) { const d = await res.json(); toast(d.error || '保存失败', 'error'); return; }
+    toast('保存成功', 'success');
+    loadDashboard();
+  } catch { toast('保存失败', 'error'); }
+}
+
+/* ========== REVIEWS ========== */
+let _reviewStatus = '';
+async function loadMerchantReviews(status) {
+  _reviewStatus = status;
+  ['revFilterAll', 'revFilterPending', 'revFilterApproved', 'revFilterRejected'].forEach(id => {
+    const btn = document.getElementById(id);
+    const isActive = (id === 'revFilterAll' && !status) || (id === 'revFilter' + status.charAt(0).toUpperCase() + status.slice(1));
+    btn.className = 'btn sm' + (isActive ? ' primary' : '');
+  });
+  try {
+    const url = '/api/merchant/reviews' + (status ? '?status=' + status : '');
+    const res = await api(url);
+    const data = await res.json();
+    renderMerchantReviews(data.reviews || []);
+  } catch { toast('加载评价失败', 'error'); }
+}
+
+function renderMerchantReviews(reviews) {
+  const el = document.getElementById('reviewList');
+  const statusLabels = { pending: '待审核', approved: '已通过', rejected: '已拒绝' };
+  if (!reviews.length) { el.innerHTML = '<div style="text-align:center;padding:32px;color:var(--muted);">暂无评价</div>'; return; }
+  el.innerHTML = reviews.map(r => {
+    const stars = '★'.repeat(r.score) + '☆'.repeat(5 - r.score);
+    const tags = Array.isArray(r.tags) ? r.tags : [];
+    const replyHtml = r.merchant_reply
+      ? `<div class="review-reply"><div class="review-reply-label">商家回复</div>${esc(r.merchant_reply)}</div>`
+      : (r.status === 'approved' ? `<textarea class="reply-input" id="reply-${r.id}" placeholder="回复该评价（限 500 字）..."></textarea><button class="btn sm primary" style="margin-top:6px;" onclick="submitReply(${r.id})">提交回复</button>` : '');
+    return `<div class="review-card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap;">
+        <span class="review-stars">${stars}</span>
+        <span class="review-status ${r.status}">${statusLabels[r.status] || r.status}</span>
+        <span style="margin-inline-start:auto;font-size:12px;color:var(--muted);">${r.created_at || ''}</span>
+      </div>
+      ${r.content ? `<div style="font-size:13px;margin-bottom:4px;">${esc(r.content)}</div>` : ''}
+      ${tags.length ? `<div class="review-tags">${tags.map(t => `<span class="review-tag">${esc(t)}</span>`).join('')}</div>` : ''}
+      ${replyHtml}
+    </div>`;
+  }).join('');
+}
+
+async function submitReply(reviewId) {
+  const textarea = document.getElementById('reply-' + reviewId);
+  const reply = textarea.value.trim();
+  if (!reply) { toast('请输入回复内容', 'error'); return; }
+  try {
+    const res = await api('/api/merchant/reviews/' + reviewId + '/reply', { method: 'POST', body: JSON.stringify({ reply }) });
+    if (!res.ok) { const d = await res.json(); toast(d.error || '回复失败', 'error'); return; }
+    toast('回复成功', 'success');
+    loadMerchantReviews(_reviewStatus);
+  } catch { toast('回复失败', 'error'); }
+}
+
+/* ========== INIT ========== */
+(async function init() {
+  // Load providers for register dropdown
+  try {
+    const res = await fetch(API_BASE + '/api/providers');
+    const data = await res.json();
+    const sel = document.getElementById('regProvider');
+    sel.innerHTML = '<option value="">请选择要认领的商家</option>' + (data.providers || []).map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
+  } catch {}
+  // Auto-login if token exists
+  if (merchantToken) {
+    try {
+      const res = await fetch(API_BASE + '/api/merchant/dashboard', { headers: { 'Authorization': 'Bearer ' + merchantToken } });
+      if (res.ok) { const data = await res.json(); providerId = data.provider.id; showDashboard(); } else { doLogout(); }
+    } catch { doLogout(); }
+  }
+})();
+</script>
+</body>
+</html>

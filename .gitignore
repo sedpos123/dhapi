@@ -3,3 +3,7 @@ data/
 .env
 .claude/
 .wrangler/
+_dev_local*.db*
+.workbuddy/
+/homepage-*.png
+/test.png

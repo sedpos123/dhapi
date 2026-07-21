@@ -7,7 +7,13 @@ binding = "DB"
 database_name = "llm-nav-db"
 database_id = "f3c4458e-51db-42cb-a222-acc6358bcb58"
 
+# [[r2_buckets]]
+# binding = "LOGOS"
+# bucket_name = "dhapi-logos"
+
 [vars]
-ADMIN_PASSWORD = "dhapi2024admin"
-JWT_SECRET = "dhapi-jwt-secret-prod-2024x"
 JWT_EXPIRES_IN = "24h"
+ALLOWED_ORIGINS = "https://dhapi.pages.dev"
+
+# ADMIN_PASSWORD and JWT_SECRET must be configured as encrypted deployment
+# values, not committed to this file.

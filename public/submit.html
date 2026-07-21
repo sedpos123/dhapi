@@ -28,13 +28,15 @@ body { background: var(--bg); color: var(--fg); font-family: var(--font-body); l
   background: oklch(97% 0.012 80 / 0.92);
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
-  padding: 0 24px; height: 56px;
+  padding: 0 24px; height: 64px;
   display: flex; align-items: center; gap: 24px;
 }
 .topnav .brand {
   font-family: var(--font-display); font-size: 20px; font-weight: 600;
   letter-spacing: -0.01em; color: var(--fg); white-space: nowrap; text-decoration: none;
+  display: flex; align-items: center; gap: 8px;
 }
+.topnav .brand img { width: 48px; height: 48px; border-radius: 10px; object-fit: contain; }
 .topnav .brand span { color: var(--accent); }
 .topnav .nav-links { display: flex; gap: 20px; margin-inline-start: auto; }
 .topnav .nav-links a {
@@ -184,7 +186,7 @@ body { background: var(--bg); color: var(--fg); font-family: var(--font-body); l
 </head>
 <body>
 <nav class="topnav">
-  <a href="index.html" class="brand">中转<span>导航</span></a>
+  <a href="index.html" class="brand"><img src="/logos/site-logo.png" alt="" />中转<span>导航</span></a>
   <div class="nav-links">
     <a href="index.html">首页</a>
     <a href="#">对比</a>
@@ -226,13 +228,10 @@ body { background: var(--bg); color: var(--fg); font-family: var(--font-body); l
             <label class="form-label" for="providerCategory">分类<span class="required">*</span></label>
             <select class="form-select" id="providerCategory" required>
               <option value="">请选择分类</option>
-              <option value="综合中转">综合中转</option>
-              <option value="专注 OpenAI">专注 OpenAI</option>
-              <option value="专注 Claude">专注 Claude</option>
-              <option value="国产模型">国产模型</option>
-              <option value="多模型聚合">多模型聚合</option>
-              <option value="开源方案">开源方案</option>
+              <option value="官方直连">官方直连</option>
+              <option value="聚合中转">聚合中转</option>
             </select>
+            <p class="form-hint" id="categoryHint" style="font-size:12px;color:var(--muted);margin-top:6px;"></p>
           </div>
         </div>
         <div class="form-row">
@@ -258,6 +257,32 @@ body { background: var(--bg); color: var(--fg); font-family: var(--font-body); l
           <div class="form-row">
             <label class="form-label" for="outputPrice">输出价格<span class="hint">每百万 token，选填</span></label>
             <input class="form-input" type="text" id="outputPrice" placeholder="例如：¥28" />
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">计费方式<span class="required">*</span></label>
+          <div class="billing-checks" id="billingChecks" style="display:flex;gap:8px;flex-wrap:wrap;">
+            <label class="model-check" data-val="pay_as_you_go"><input type="checkbox" /><span class="check-box">✓</span><span class="model-name">按量计费</span></label>
+            <label class="model-check" data-val="subscription"><input type="checkbox" /><span class="check-box">✓</span><span class="model-name">包月/包年</span></label>
+            <label class="model-check" data-val="free"><input type="checkbox" /><span class="check-box">✓</span><span class="model-name">免费</span></label>
+            <label class="model-check" data-val="enterprise"><input type="checkbox" /><span class="check-box">✓</span><span class="model-name">企业定制</span></label>
+          </div>
+        </div>
+        <div class="form-row-inline">
+          <div class="form-row">
+            <label class="form-label" for="targetAudience">目标用户</label>
+            <select class="form-select" id="targetAudience">
+              <option value="通用">通用（个人+企业）</option>
+              <option value="个人开发者">个人开发者</option>
+              <option value="企业">企业</option>
+              <option value="学生">学生</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label class="form-label">
+              <input type="checkbox" id="freeQuota" style="margin-right:6px;accent-color:var(--accent);" />
+              提供免费额度/试用额度
+            </label>
           </div>
         </div>
       </div>
@@ -309,6 +334,7 @@ const selectedModels = new Set();
 const features = [];
 const dropzone = document.getElementById('logoDropzone');
 const logoInput = document.getElementById('logoInput');
+let uploadedLogoUrl = '';
 dropzone.addEventListener('click', () => logoInput.click());
 dropzone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); logoInput.click(); } });
 dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.style.borderColor = 'var(--accent)'; });
@@ -317,9 +343,29 @@ dropzone.addEventListener('drop', e => { e.preventDefault(); dropzone.style.bord
 logoInput.addEventListener('change', () => { if (logoInput.files.length) handleLogoFile(logoInput.files[0]); });
 function handleLogoFile(file) {
   if (!file.type.startsWith('image/')) return;
+  let dataUrl = '';
   const reader = new FileReader();
-  reader.onload = e => { dropzone.innerHTML = '<img src="' + e.target.result + '" alt="LOGO 预览" />'; dropzone.classList.add('has-image'); };
+  reader.onload = e => {
+    dataUrl = e.target.result;
+    dropzone.innerHTML = '<img src="' + dataUrl + '" alt="LOGO 预览" /><span style="position:absolute;bottom:2px;right:4px;font-size:10px;color:var(--muted);">上传中…</span>';
+    dropzone.classList.add('has-image');
+  };
   reader.readAsDataURL(file);
+  const formData = new FormData();
+  formData.append('file', file);
+  fetch(API_BASE + '/api/upload-logo', { method: 'POST', body: formData })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        uploadedLogoUrl = data.logo_url;
+        dropzone.innerHTML = '<img src="' + (dataUrl || '') + '" alt="LOGO 预览" /><span style="position:absolute;bottom:2px;right:4px;font-size:10px;color:var(--success);">✓ 已上传</span>';
+      } else {
+        dropzone.innerHTML = '<span style="font-size:10px;color:var(--danger);">' + (data.error || '上传失败') + '</span>';
+        dropzone.classList.remove('has-image');
+        uploadedLogoUrl = '';
+      }
+    })
+    .catch(() => { dropzone.innerHTML = '<span style="font-size:10px;color:var(--danger);">上传失败</span>'; dropzone.classList.remove('has-image'); uploadedLogoUrl = ''; });
 }
 function renderModelGrid() {
   const grid = document.getElementById('modelGrid');
@@ -347,7 +393,9 @@ document.getElementById('submitForm').addEventListener('submit', async e => {
   const category = document.getElementById('providerCategory').value;
   const desc = document.getElementById('providerDesc').value.trim();
   const inputPrice = document.getElementById('inputPrice').value.trim();
-  if (!name || !url || !category || !desc || !inputPrice) { highlightEmpty(); return; }
+  const billingChecked = Array.from(document.querySelectorAll('#billingChecks .model-check.checked')).map(el => el.dataset.val);
+  const billingType = billingChecked.join(',');
+  if (!name || !url || !category || !desc || !inputPrice || billingChecked.length === 0) { highlightEmpty(); return; }
   if (selectedModels.size === 0) { document.getElementById('modelGrid').style.outline = '2px solid var(--danger)'; document.getElementById('modelGrid').scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => { document.getElementById('modelGrid').style.outline = ''; }, 2000); return; }
   const btn = document.getElementById('btnSubmit');
   btn.disabled = true; btn.textContent = '提交中…';
@@ -364,7 +412,12 @@ document.getElementById('submitForm').addEventListener('submit', async e => {
         contact_email: document.getElementById('contactEmail').value.trim(),
         contact_wechat: document.getElementById('contactWechat').value.trim(),
         extra_note: document.getElementById('extraNote').value.trim(),
-        logo_color: '#888'
+        logo_color: '#888',
+        logo_url: uploadedLogoUrl,
+        billing_type: billingType,
+        supported_models: Array.from(selectedModels),
+        target_audience: document.getElementById('targetAudience').value,
+        free_quota: document.getElementById('freeQuota').checked ? 1 : 0
       })
     });
     if (res.ok) {
@@ -379,6 +432,10 @@ document.getElementById('submitForm').addEventListener('submit', async e => {
   btn.disabled = false; btn.textContent = '提交申请';
 });
 // Dynamic category loading
+const CATEGORY_DESCS = {
+  '官方直连': '官方模型官网或官方 API 平台，由模型厂商直接提供服务',
+  '聚合中转': '所有非官方直连的第三方聚合、中转或统一接入平台'
+};
 (async function loadCategories() {
   try {
     const res = await fetch(API_BASE + '/api/categories').then(r => r.json());
@@ -387,15 +444,26 @@ document.getElementById('submitForm').addEventListener('submit', async e => {
     (res.categories || []).forEach(c => {
       const opt = document.createElement('option');
       opt.value = c.name; opt.textContent = c.name;
+      if (c.description) opt.setAttribute('data-desc', c.description);
       select.appendChild(opt);
     });
   } catch {}
 })();
+document.getElementById('providerCategory').addEventListener('change', function() {
+  const desc = this.options[this.selectedIndex]?.getAttribute('data-desc') || CATEGORY_DESCS[this.value] || '';
+  document.getElementById('categoryHint').textContent = desc;
+});
 function highlightEmpty() {
   ['providerName','providerUrl','providerCategory','providerDesc','inputPrice'].forEach(id => {
-    const el = document.getElementById(id); if (!el.value.trim()) { el.style.borderColor = 'var(--danger)'; el.addEventListener('input', function handler() { el.style.borderColor = ''; el.removeEventListener('input', handler); }, { once: true }); }
+    const el = document.getElementById(id); if (el && !el.value.trim()) { el.style.borderColor = 'var(--danger)'; el.addEventListener('input', function handler() { el.style.borderColor = ''; el.removeEventListener('input', handler); }, { once: true }); el.addEventListener('change', function handler() { el.style.borderColor = ''; el.removeEventListener('change', handler); }, { once: true }); }
   });
+  const billingChecked = document.querySelectorAll('#billingChecks .model-check.checked').length;
+  if (billingChecked === 0) { const el = document.getElementById('billingChecks'); el.style.outline = '2px solid var(--danger)'; el.style.borderRadius = '6px'; document.querySelectorAll('#billingChecks .model-check').forEach(c => c.addEventListener('click', function handler() { el.style.outline = ''; el.style.borderRadius = ''; }, { once: true })); }
 }
+// Billing type checkbox toggles
+document.querySelectorAll('#billingChecks .model-check').forEach(el => {
+  el.addEventListener('click', () => { el.classList.toggle('checked'); });
+});
 </script>
 </body>
 </html>
