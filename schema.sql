@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS providers (
   site_status_code INTEGER DEFAULT 0,
   site_latency_ms INTEGER DEFAULT 0,
   site_error     TEXT DEFAULT '',
+  site_error_days INTEGER DEFAULT 0,
   created_at   TEXT DEFAULT (datetime('now','localtime')),
   updated_at   TEXT DEFAULT (datetime('now','localtime'))
 );

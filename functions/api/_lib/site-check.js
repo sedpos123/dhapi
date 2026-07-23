@@ -1,5 +1,6 @@
 const DEFAULT_TIMEOUT_MS = 10000;
 const MAX_ERROR_LENGTH = 180;
+const HIDE_AFTER_ERROR_DAYS = 7;
 
 function nowIso() {
   return new Date().toISOString();
@@ -80,6 +81,11 @@ export async function checkProviderSite(provider, options = {}) {
 }
 
 export async function saveProviderSiteStatus(db, result) {
+  const current = await db.prepare('SELECT site_error_days FROM providers WHERE id = ?').bind(result.provider_id).first();
+  const currentDays = Math.max(0, Number(current?.site_error_days || 0));
+  const nextDays = result.site_status === 'error' ? currentDays + 1 : 0;
+  const nextOnline = nextDays >= HIDE_AFTER_ERROR_DAYS ? 0 : 1;
+
   await db.prepare(`
     UPDATE providers
     SET site_status = ?,
@@ -87,6 +93,8 @@ export async function saveProviderSiteStatus(db, result) {
         site_status_code = ?,
         site_latency_ms = ?,
         site_error = ?,
+        site_error_days = ?,
+        online = ?,
         updated_at = datetime('now','localtime')
     WHERE id = ?
   `).bind(
@@ -95,8 +103,13 @@ export async function saveProviderSiteStatus(db, result) {
     result.site_status_code,
     result.site_latency_ms,
     result.site_error,
+    nextDays,
+    nextOnline,
     result.provider_id
   ).run();
+
+  result.site_error_days = nextDays;
+  result.hidden = nextOnline === 0;
 }
 
 export async function runProviderSiteChecks(env, options = {}) {
@@ -107,11 +120,11 @@ export async function runProviderSiteChecks(env, options = {}) {
   let rows;
   if (onlyIds.length) {
     const placeholders = onlyIds.map(() => '?').join(',');
-    const res = await db.prepare(`SELECT id, name, url FROM providers WHERE online = 1 AND id IN (${placeholders})`).bind(...onlyIds).all();
+    const res = await db.prepare(`SELECT id, name, url, site_error_days FROM providers WHERE online = 1 AND id IN (${placeholders})`).bind(...onlyIds).all();
     rows = res.results || [];
   } else {
     const res = await db.prepare(`
-      SELECT id, name, url
+      SELECT id, name, url, site_error_days
       FROM providers
       WHERE online = 1
       ORDER BY
@@ -135,6 +148,7 @@ export async function runProviderSiteChecks(env, options = {}) {
     ok: results.filter(item => item.site_status === 'ok').length,
     error: results.filter(item => item.site_status === 'error').length,
     unknown: results.filter(item => item.site_status === 'unknown').length,
+    hidden: results.filter(item => item.hidden).length,
     results
   };
 }

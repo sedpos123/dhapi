@@ -22,7 +22,8 @@ export function parseProvider(row) {
     site_checked_at: row.site_checked_at || '',
     site_status_code: row.site_status_code || 0,
     site_latency_ms: row.site_latency_ms || 0,
-    site_error: row.site_error || ''
+    site_error: row.site_error || '',
+    site_error_days: row.site_error_days || 0
   };
 }
 

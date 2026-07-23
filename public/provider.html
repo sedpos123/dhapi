@@ -363,25 +363,14 @@ let selectedScore = 0;
 let selectedTags = [];
 let reviews = [];
 
-function calcAgeMonths(foundedAt) {
-  if (!foundedAt) return 0;
-  const parts = foundedAt.split('-');
-  const y = parseInt(parts[0]); const m = parts.length > 1 ? parseInt(parts[1]) : 1;
-  if (!y) return 0;
-  const now = new Date();
-  return (now.getFullYear() - y) * 12 + (now.getMonth() + 1 - m);
-}
-function fmtAge(foundedAt) {
-  const months = calcAgeMonths(foundedAt);
-  if (!months) return '—';
-  if (months >= 24) return (months / 12).toFixed(1).replace(/\.0$/, '') + ' 年';
-  return months + ' 个月';
-}
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 function starsHtml(score) { return '★'.repeat(score) + '☆'.repeat(5 - score); }
+function siteStatusLabel() {
+  const status = ['ok', 'error', 'unknown'].includes(provider.site_status) ? provider.site_status : 'unknown';
+  return { ok: '网站正常', error: '网站异常', unknown: '未检查' }[status];
+}
 function renderSiteStatus() {
   const status = ['ok', 'error', 'unknown'].includes(provider.site_status) ? provider.site_status : 'unknown';
-  const labels = { ok: '网站正常', error: '网站异常', unknown: '未检查' };
   const details = [];
   if (provider.site_checked_at) details.push('检查时间：' + esc(provider.site_checked_at));
   if (provider.site_status_code) details.push('状态码：' + esc(String(provider.site_status_code)));
@@ -389,7 +378,7 @@ function renderSiteStatus() {
   if (provider.site_error) details.push('说明：' + esc(provider.site_error));
   document.getElementById('siteStatusBody').innerHTML = `
     <div class="site-status-card">
-      <div class="site-status-main ${status}"><span class="site-status-dot"></span>${labels[status]}</div>
+      <div class="site-status-main ${status}"><span class="site-status-dot"></span>${siteStatusLabel()}</div>
       <div class="site-status-meta">${details.length ? details.join('<br>') : '每日自动检查，暂无记录'}</div>
     </div>
   `;
@@ -432,7 +421,6 @@ function renderProvider() {
   document.getElementById('loadingView').style.display = 'none';
   document.getElementById('contentView').style.display = 'block';
   const p = provider;
-  const age = fmtAge(p.founded_at);
   const models = (p.supported_models && p.supported_models.length) ? p.supported_models : p.brands;
   const billingLabels = { pay_as_you_go: '按量计费', subscription: '包月/包年', free: '免费', enterprise: '企业定制' };
   const hasUrl = p.url && p.url !== '#';
@@ -440,9 +428,9 @@ function renderProvider() {
   const logoHtml = p.logo_url
     ? `<div class="provider-logo"><img src="${(p.logo_url.startsWith('/') || p.logo_url.startsWith('http')) ? p.logo_url : API_BASE + '/api/logo/' + p.id}" alt="${esc(p.name)}" style="width:72px;height:72px;border-radius:12px;object-fit:cover;" onerror="this.parentElement.innerHTML='<div class=\\'provider-logo\\' style=\\'background:${p.color}\\'>${p.name[0]}</div>'" /></div>`
     : `<div class="provider-logo" style="background:${p.color}">${p.name[0]}</div>`;
-  document.getElementById('providerHeader').innerHTML = `${logoHtml}<div class="provider-info"><h1>${esc(p.name)}</h1><div class="provider-meta">${p.category ? `<span>${esc(p.category)}</span>` : ''}${p.founded_at ? `<span>运营 ${age}</span>` : ''}${p.target_audience ? `<span>面向 ${esc(p.target_audience)}</span>` : ''}</div><div class="provider-actions">${hasUrl ? `<a href="${ctaHref}" class="cta-btn" target="_blank" rel="noopener">访问官网</a>` : ''}<a href="#reviewForm" class="secondary-btn">写评价</a></div></div>`;
+  document.getElementById('providerHeader').innerHTML = `${logoHtml}<div class="provider-info"><h1>${esc(p.name)}</h1><div class="provider-meta">${p.category ? `<span>${esc(p.category)}</span>` : ''}<span>${siteStatusLabel()}</span>${p.target_audience ? `<span>面向 ${esc(p.target_audience)}</span>` : ''}</div><div class="provider-actions">${hasUrl ? `<a href="${ctaHref}" class="cta-btn" target="_blank" rel="noopener">访问官网</a>` : ''}<a href="#reviewForm" class="secondary-btn">写评价</a></div></div>`;
   const planCount = (p.pricing_plans || []).length;
-  document.getElementById('statsGrid').innerHTML = `<div class="stat-card"><span class="stat-val">${models.length}</span><span class="stat-label">支持模型</span></div><div class="stat-card"><span class="stat-val">${age || '—'}</span><span class="stat-label">运营时长</span></div><div class="stat-card"><span class="stat-val">${p.avg_rating > 0 ? p.avg_rating.toFixed(1) : '—'}</span><span class="stat-label">用户评分</span></div><div class="stat-card"><span class="stat-val">${planCount || p.favorite_count || 0}</span><span class="stat-label">${planCount ? '定价套餐' : '收藏数'}</span></div>`;
+  document.getElementById('statsGrid').innerHTML = `<div class="stat-card"><span class="stat-val">${models.length}</span><span class="stat-label">支持模型</span></div><div class="stat-card"><span class="stat-val">${siteStatusLabel()}</span><span class="stat-label">网站状态</span></div><div class="stat-card"><span class="stat-val">${p.avg_rating > 0 ? p.avg_rating.toFixed(1) : '—'}</span><span class="stat-label">用户评分</span></div><div class="stat-card"><span class="stat-val">${planCount || p.favorite_count || 0}</span><span class="stat-label">${planCount ? '定价套餐' : '收藏数'}</span></div>`;
   const billing = p.billing_type ? billingLabels[p.billing_type] || p.billing_type : '未设置';
   document.getElementById('infoGrid').innerHTML = `<div class="info-item"><span class="label">计费方式</span><span class="value">${billing}</span></div><div class="info-item"><span class="label">目标用户</span><span class="value">${esc(p.target_audience) || '通用'}</span></div><div class="info-item"><span class="label">输入价格</span><span class="value">${esc(p.input_price) || '—'}/M tokens</span></div><div class="info-item"><span class="label">输出价格</span><span class="value">${esc(p.output_price) || '—'}/M tokens</span></div>${p.free_quota ? '<div class="info-item"><span class="label">免费额度</span><span class="value" style="color:var(--success)">有</span></div>' : ''}`;
   renderSiteStatus();

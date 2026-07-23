@@ -378,7 +378,7 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   <div class="stats-row">
     <div class="stat-item"><span class="num" id="statProviders">0</span>收录商家</div>
     <div class="stat-item"><span class="num" id="statBrands">0</span>覆盖品牌</div>
-    <div class="stat-item"><span class="num" id="statAvgAge">—</span>平均运营</div>
+    <div class="stat-item"><span class="num" id="statSiteOk">0</span>网站正常</div>
   </div>
 </header>
 <div class="chip-row" id="chipRow"></div>
@@ -404,10 +404,6 @@ a:focus-visible, button:focus-visible, input:focus-visible {
       <h3>目标用户</h3>
       <div id="audienceFilters"></div>
     </div>
-    <div class="filter-group">
-      <h3>存活时间</h3>
-      <div id="ratingFilters"></div>
-    </div>
     <div class="ranking-section">
       <h3>排行榜</h3>
       <div class="ranking-tabs">
@@ -423,7 +419,7 @@ a:focus-visible, button:focus-visible, input:focus-visible {
       <div class="result-count" id="resultCount">共 <strong>0</strong> 家商家</div>
       <button class="mobile-filter-toggle" type="button" onclick="toggleMobileFilters()">筛选</button>
       <button class="sort-btn active" data-sort="default">默认排序</button>
-      <button class="sort-btn" data-sort="age">运营时长</button>
+      <button class="sort-btn" data-sort="site">网站状态</button>
       <button class="sort-btn" data-sort="brands">品牌最多</button>
       <button class="sort-btn" data-sort="heat">热度排序</button>
       <button class="sort-btn" data-sort="rating">评分排序</button>
@@ -454,11 +450,10 @@ let providers = [];
 let categories = ['全部'];
 let categoryObjs = {};
 let brandOptions = [];
-const ageOptions = ['不限', '运营2年+', '运营1年+', '半年+'];
 const billingOptions = ['不限', '按量计费', '包月/包年', '免费', '企业定制'];
 const billingMap = { '按量计费': 'pay_as_you_go', '包月/包年': 'subscription', '免费': 'free', '企业定制': 'enterprise' };
 const audienceOptions = ['不限', '通用', '个人开发者', '企业', '学生'];
-let activeCategory = '全部', activeBrand = null, activeAge = 0, activeBilling = 0, activeAudience = 0, currentSort = 'default', searchQuery = '';
+let activeCategory = '全部', activeBrand = null, activeBilling = 0, activeAudience = 0, currentSort = 'default', searchQuery = '';
 
 function esc(value) {
   const node = document.createElement('div');
@@ -477,21 +472,6 @@ function viewProvider(source) {
     brands: (source.brands || []).map(esc), features: (source.features || []).map(esc),
     supported_models: (source.supported_models || []).map(esc)
   };
-}
-
-function calcAgeMonths(foundedAt) {
-  if (!foundedAt) return 0;
-  const parts = foundedAt.split('-');
-  const y = parseInt(parts[0]); const m = parts.length > 1 ? parseInt(parts[1]) : 1;
-  if (!y) return 0;
-  const now = new Date();
-  return (now.getFullYear() - y) * 12 + (now.getMonth() + 1 - m);
-}
-function fmtAge(foundedAt) {
-  const months = calcAgeMonths(foundedAt);
-  if (!months) return '—';
-  if (months >= 24) return (months / 12).toFixed(1).replace(/\.0$/, '') + ' 年';
-  return months + ' 个月';
 }
 
 /* ---- localStorage 收藏 ---- */
@@ -527,13 +507,12 @@ function getFilteredProviders() {
   let list = [...providers];
   if (activeCategory !== '全部') list = list.filter(p => p.category === activeCategory);
   if (activeBrand) list = list.filter(p => p.brands.some(b => b.includes(activeBrand)));
-  if (activeAge > 0) { const t = [0, 24, 12, 6]; list = list.filter(p => calcAgeMonths(p.founded_at) >= t[activeAge]); }
   if (activeBilling > 0) { const bt = billingMap[billingOptions[activeBilling]]; list = list.filter(p => p.billing_type === bt); }
   if (activeAudience > 0) list = list.filter(p => p.target_audience === audienceOptions[activeAudience]);
   if (searchQuery) { const q = searchQuery.toLowerCase(); list = list.filter(p => p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || p.brands.some(b => b.toLowerCase().includes(q)) || p.category.toLowerCase().includes(q) || (p.supported_models || []).some(m => m.toLowerCase().includes(q))); }
   switch (currentSort) {
     case 'default': /* keep server-side order */ break;
-    case 'age': list.sort((a, b) => calcAgeMonths(b.founded_at) - calcAgeMonths(a.founded_at)); break;
+    case 'site': list.sort((a, b) => siteStatusRank(a) - siteStatusRank(b)); break;
     case 'brands': list.sort((a, b) => b.brands.length - a.brands.length); break;
     case 'heat': list.sort((a, b) => (b.click_count + b.favorite_count * 3) - (a.click_count + a.favorite_count * 3)); break;
     case 'rating': list.sort((a, b) => (b.avg_rating || 0) - (a.avg_rating || 0)); break;
@@ -546,7 +525,6 @@ function getActiveFilterLabels() {
   if (activeBrand) labels.push(activeBrand);
   if (activeBilling > 0) labels.push(billingOptions[activeBilling]);
   if (activeAudience > 0) labels.push(audienceOptions[activeAudience]);
-  if (activeAge > 0) labels.push(ageOptions[activeAge]);
   if (searchQuery) labels.push(`搜索“${searchQuery}”`);
   return labels;
 }
@@ -558,7 +536,7 @@ function updateFilterSummary() {
   text.textContent = labels.length ? labels.join(' · ') : '未使用筛选';
 }
 function clearFilters() {
-  activeCategory = '全部'; activeBrand = null; activeAge = 0; activeBilling = 0; activeAudience = 0; searchQuery = '';
+  activeCategory = '全部'; activeBrand = null; activeBilling = 0; activeAudience = 0; searchQuery = '';
   document.getElementById('searchInput').value = '';
   renderSidebar(); renderCards();
 }
@@ -585,6 +563,13 @@ function siteStatusHtml(p) {
   const title = titleParts.length ? ` title="${esc(titleParts.join(' · '))}"` : '';
   return `<span class="site-badge ${status}"${title}>${labels[status] || labels.unknown}</span>`;
 }
+function siteStatusLabel(p) {
+  const status = ['ok', 'error', 'unknown'].includes(p.site_status) ? p.site_status : 'unknown';
+  return { ok: '正常', error: '异常', unknown: '未检查' }[status];
+}
+function siteStatusRank(p) {
+  return { ok: 0, unknown: 1, error: 2 }[p.site_status || 'unknown'] ?? 1;
+}
 function renderCards() {
   const grid = document.getElementById('cardGrid'), list = getFilteredProviders();
   document.getElementById('resultCount').innerHTML = `共 <strong>${list.length}</strong> 家商家`;
@@ -598,14 +583,13 @@ function renderCards() {
   grid.innerHTML = list.map(source => {
     const p = viewProvider(source);
     const hasUrl = p.url && p.url !== '#';
-    const age = fmtAge(p.founded_at);
     const favd = isFav(p.id);
     const models = p.supported_models && p.supported_models.length ? p.supported_models : p.brands;
     const billingBadge = p.billing_type ? `<span class="tag" style="background:oklch(95% 0.04 145);color:var(--success);border-color:oklch(85% 0.06 145);">${billingLabels[p.billing_type] || p.billing_type}</span>` : '';
     const freeBadge = p.free_quota ? '<span class="tag" style="background:oklch(95% 0.04 35);color:var(--accent);border-color:oklch(85% 0.06 35);">免费额度</span>' : '';
     const ratingBadge = p.avg_rating > 0 ? `<span class="metric lt">${p.avg_rating.toFixed(1)}★</span>` : '<span class="metric" style="opacity:0.5">暂无评价</span>';
     const isCmp = compareList.includes(p.id);
-    return `<a class="provider-card" href="provider.html?id=${p.id}" style="text-decoration:none;color:inherit;"><div class="card-top">${logoHtml(p, 'card-logo-img')}<div class="card-name">${p.name}</div><div class="card-metrics">${ratingBadge}<button class="cmp-btn ${isCmp ? 'active' : ''}" onclick="event.preventDefault();event.stopPropagation();toggleCompare('${p.id}');renderCards()" title="加入对比">${isCmp ? '✓' : '⇄'}</button><button class="fav-btn ${favd ? 'active' : ''}" data-id="${p.id}" onclick="event.preventDefault();event.stopPropagation();toggleFav('${p.id}',this)">${favd ? '♥' : '♡'}</button></div></div><div class="card-desc">${p.desc}</div><div class="card-tags">${models.slice(0, 4).map(b => `<span class="tag">${b}</span>`).join('')}${models.length > 4 ? `<span class="tag highlight">+${models.length - 4}</span>` : ''}${billingBadge}${freeBadge}</div><div class="card-bottom"><span class="card-meta"><span class="status-dot ${p.status}"></span>${p.founded_at ? '运营 ' + age : '未知'}${p.target_audience ? ' · ' + p.target_audience : ''}</span>${siteStatusHtml(p)}${hasUrl ? `<span onclick="event.preventDefault();event.stopPropagation();window.open('${API_BASE}/api/redirect/${p.id}','_blank')" style="font-size:12px;color:var(--accent);text-decoration:none;margin-inline-start:auto;cursor:pointer">访问官网 →</span>` : `<span class="card-meta" style="margin-inline-start:auto">${models.length} 个模型</span>`}</div></a>`;
+    return `<a class="provider-card" href="provider.html?id=${p.id}" style="text-decoration:none;color:inherit;"><div class="card-top">${logoHtml(p, 'card-logo-img')}<div class="card-name">${p.name}</div><div class="card-metrics">${ratingBadge}<button class="cmp-btn ${isCmp ? 'active' : ''}" onclick="event.preventDefault();event.stopPropagation();toggleCompare('${p.id}');renderCards()" title="加入对比">${isCmp ? '✓' : '⇄'}</button><button class="fav-btn ${favd ? 'active' : ''}" data-id="${p.id}" onclick="event.preventDefault();event.stopPropagation();toggleFav('${p.id}',this)">${favd ? '♥' : '♡'}</button></div></div><div class="card-desc">${p.desc}</div><div class="card-tags">${models.slice(0, 4).map(b => `<span class="tag">${b}</span>`).join('')}${models.length > 4 ? `<span class="tag highlight">+${models.length - 4}</span>` : ''}${billingBadge}${freeBadge}</div><div class="card-bottom">${siteStatusHtml(p)}${p.target_audience ? `<span class="card-meta">${p.target_audience}</span>` : ''}${hasUrl ? `<span onclick="event.preventDefault();event.stopPropagation();window.open('${API_BASE}/api/redirect/${p.id}','_blank')" style="font-size:12px;color:var(--accent);text-decoration:none;margin-inline-start:auto;cursor:pointer">访问官网 →</span>` : `<span class="card-meta" style="margin-inline-start:auto">${models.length} 个模型</span>`}</div></a>`;
   }).join('');
 }
 function renderSidebar() {
@@ -613,7 +597,6 @@ function renderSidebar() {
   document.getElementById('brandFilters').innerHTML = brandOptions.map(b => { const n = providers.filter(p => p.brands.includes(b)).length; return `<label class="filter-item ${activeBrand === b ? 'active' : ''}"><input type="checkbox" ${activeBrand === b ? 'checked' : ''} onchange="toggleBrand('${b}')" />${b} <span class="count">${n}</span></label>`; }).join('');
   document.getElementById('billingFilters').innerHTML = billingOptions.map((r, i) => { const bt = i > 0 ? billingMap[r] : null; const n = i === 0 ? providers.length : providers.filter(p => p.billing_type === bt).length; return `<div class="filter-item ${activeBilling === i ? 'active' : ''}" onclick="setBilling(${i})">${r} <span class="count">${n}</span></div>`; }).join('');
   document.getElementById('audienceFilters').innerHTML = audienceOptions.map((r, i) => { const n = i === 0 ? providers.length : providers.filter(p => p.target_audience === r).length; return `<div class="filter-item ${activeAudience === i ? 'active' : ''}" onclick="setAudience(${i})">${r} <span class="count">${n}</span></div>`; }).join('');
-  document.getElementById('ratingFilters').innerHTML = ageOptions.map((r, i) => `<div class="filter-item ${activeAge === i ? 'active' : ''}" onclick="setAge(${i})">${r}</div>`).join('');
   document.getElementById('chipRow').innerHTML = categories.map(c => { const tip = categoryObjs[c]?.description ? ` title="${categoryObjs[c].description}"` : ''; return `<span class="chip ${activeCategory === c ? 'active' : ''}" onclick="setCategory('${c}')"${tip}>${c}</span>`; }).join('');
   updateFilterSummary();
 }
@@ -621,18 +604,16 @@ function openModal(id) {
   const source = providers.find(x => x.id === id); if (!source) return;
   const p = viewProvider(source);
   const hasUrl = p.url && p.url !== '#';
-  const age = fmtAge(p.founded_at);
   const models = p.supported_models && p.supported_models.length ? p.supported_models : p.brands;
   const billingLabels = { pay_as_you_go: '按量计费', subscription: '包月/包年', free: '免费', enterprise: '企业定制' };
   const billingText = p.billing_type ? billingLabels[p.billing_type] || p.billing_type : '未设置';
   const ratingText = p.avg_rating > 0 ? p.avg_rating.toFixed(1) + '★' : '暂无评价';
-  document.getElementById('modalContent').innerHTML = `<div class="modal-header">${logoHtml(p, 'card-logo-img')}<h2>${p.name}</h2><button class="fav-btn ${isFav(p.id) ? 'active' : ''}" data-id="${p.id}" onclick="toggleFav('${p.id}',this)">${isFav(p.id) ? '♥' : '♡'}</button><button class="modal-close" onclick="closeModal()" aria-label="关闭">&times;</button></div><div class="modal-body"><div class="modal-section"><p class="modal-desc">${p.desc}</p></div><div class="modal-section"><h4>关键数据</h4><div class="modal-stats"><div class="modal-stat"><span class="val">${models.length}</span><span class="label">支持模型</span></div><div class="modal-stat"><span class="val">${age}</span><span class="label">运营时长</span></div><div class="modal-stat"><span class="val">${ratingText}</span><span class="label">评分</span></div><div class="modal-stat"><span class="val"><span class="stat-icon">♥</span>${p.favorite_count || 0}</span><span class="label">收藏数</span></div></div></div><div class="modal-section"><h4>服务信息</h4><div style="display:flex;gap:8px;flex-wrap:wrap;"><span class="tag">计费: ${billingText}</span><span class="tag">用户: ${p.target_audience || '通用'}</span>${p.free_quota ? '<span class="tag highlight">免费额度</span>' : ''}${p.input_price ? `<span class="tag">输入: ${p.input_price}/M</span>` : ''}${p.output_price ? `<span class="tag">输出: ${p.output_price}/M</span>` : ''}</div></div><div class="modal-section"><h4>支持模型</h4><div class="modal-models">${models.map(b => `<span class="tag">${b}</span>`).join('')}</div></div><div class="modal-section"><h4>核心特性</h4><ul class="modal-features">${(p.features || []).map(f => `<li>${f}</li>`).join('') || '<li style="color:var(--muted)">暂无特性描述</li>'}</ul></div>${hasUrl ? `<div class="modal-section" style="display:flex;gap:12px;flex-wrap:wrap;"><a href="${API_BASE}/api/redirect/${p.id}" target="_blank" rel="noopener" class="modal-cta">访问官网</a><a href="provider.html?id=${p.id}" class="modal-cta" style="background:var(--bg);color:var(--fg);border:1px solid var(--border);">查看详情 →</a></div>` : `<div class="modal-section"><a href="provider.html?id=${p.id}" class="modal-cta">查看详情 →</a></div>`}</div>`;
+  document.getElementById('modalContent').innerHTML = `<div class="modal-header">${logoHtml(p, 'card-logo-img')}<h2>${p.name}</h2><button class="fav-btn ${isFav(p.id) ? 'active' : ''}" data-id="${p.id}" onclick="toggleFav('${p.id}',this)">${isFav(p.id) ? '♥' : '♡'}</button><button class="modal-close" onclick="closeModal()" aria-label="关闭">&times;</button></div><div class="modal-body"><div class="modal-section"><p class="modal-desc">${p.desc}</p></div><div class="modal-section"><h4>关键数据</h4><div class="modal-stats"><div class="modal-stat"><span class="val">${models.length}</span><span class="label">支持模型</span></div><div class="modal-stat"><span class="val">${siteStatusLabel(p)}</span><span class="label">网站状态</span></div><div class="modal-stat"><span class="val">${ratingText}</span><span class="label">评分</span></div><div class="modal-stat"><span class="val"><span class="stat-icon">♥</span>${p.favorite_count || 0}</span><span class="label">收藏数</span></div></div></div><div class="modal-section"><h4>服务信息</h4><div style="display:flex;gap:8px;flex-wrap:wrap;"><span class="tag">计费: ${billingText}</span><span class="tag">用户: ${p.target_audience || '通用'}</span>${p.free_quota ? '<span class="tag highlight">免费额度</span>' : ''}${p.input_price ? `<span class="tag">输入: ${p.input_price}/M</span>` : ''}${p.output_price ? `<span class="tag">输出: ${p.output_price}/M</span>` : ''}</div></div><div class="modal-section"><h4>支持模型</h4><div class="modal-models">${models.map(b => `<span class="tag">${b}</span>`).join('')}</div></div><div class="modal-section"><h4>核心特性</h4><ul class="modal-features">${(p.features || []).map(f => `<li>${f}</li>`).join('') || '<li style="color:var(--muted)">暂无特性描述</li>'}</ul></div>${hasUrl ? `<div class="modal-section" style="display:flex;gap:12px;flex-wrap:wrap;"><a href="${API_BASE}/api/redirect/${p.id}" target="_blank" rel="noopener" class="modal-cta">访问官网</a><a href="provider.html?id=${p.id}" class="modal-cta" style="background:var(--bg);color:var(--fg);border:1px solid var(--border);">查看详情 →</a></div>` : `<div class="modal-section"><a href="provider.html?id=${p.id}" class="modal-cta">查看详情 →</a></div>`}</div>`;
   document.getElementById('modalOverlay').classList.add('open'); document.body.style.overflow = 'hidden';
 }
 function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); document.body.style.overflow = ''; }
 function setCategory(c) { activeCategory = c; renderSidebar(); renderCards(); }
 function toggleBrand(b) { activeBrand = activeBrand === b ? null : b; renderSidebar(); renderCards(); }
-function setAge(i) { activeAge = i; renderSidebar(); renderCards(); }
 function setBilling(i) { activeBilling = i; renderSidebar(); renderCards(); }
 function setAudience(i) { activeAudience = i; renderSidebar(); renderCards(); }
 document.querySelectorAll('.sort-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); currentSort = btn.dataset.sort; renderCards(); }); });
@@ -641,7 +622,7 @@ document.getElementById('modalOverlay').addEventListener('click', e => { if (e.t
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 async function loadData() {
   // Try sessionStorage cache first (instant load on back navigation)
-  const cacheKey = 'home_data_v3';
+  const cacheKey = 'home_data_v4';
   const cached = sessionStorage.getItem(cacheKey);
   if (cached) {
     try {
@@ -669,7 +650,7 @@ async function loadData() {
     document.getElementById('cardGrid').innerHTML = '<div style="text-align:center;padding:48px;color:var(--danger);">数据加载失败，请刷新页面重试</div>';
   }
 }
-(async function init() { await loadData(); const allBrands = new Set(); providers.forEach(p => p.brands.forEach(b => allBrands.add(b))); document.getElementById('statProviders').textContent = providers.length; document.getElementById('statBrands').textContent = allBrands.size; const withAge = providers.filter(p => p.founded_at); if (withAge.length) { const avgMonths = withAge.reduce((s, p) => s + calcAgeMonths(p.founded_at), 0) / withAge.length; document.getElementById('statAvgAge').textContent = avgMonths >= 24 ? (avgMonths / 12).toFixed(1).replace(/\.0$/, '') + ' 年' : Math.round(avgMonths) + ' 月'; } else { document.getElementById('statAvgAge').textContent = '—'; } renderSidebar(); renderCards(); renderRankings(); })();
+(async function init() { await loadData(); const allBrands = new Set(); providers.forEach(p => p.brands.forEach(b => allBrands.add(b))); document.getElementById('statProviders').textContent = providers.length; document.getElementById('statBrands').textContent = allBrands.size; document.getElementById('statSiteOk').textContent = providers.filter(p => p.site_status === 'ok').length; renderSidebar(); renderCards(); renderRankings(); })();
 
 /* ========== RANKINGS ========== */
 let rankingsData = { top_rated: [], popular: [], newest: [] };
