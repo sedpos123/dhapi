@@ -15,6 +15,9 @@ export function applyPublicRoutes(app) {
     xml += `<url><loc>${base}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>`;
     xml += `<url><loc>${base}/submit.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>`;
     xml += `<url><loc>${base}/sponsor.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`;
+    for (const page of ['openai-api.html', 'claude-api.html', 'deepseek-api.html', 'free-api.html', 'pay-as-you-go-api.html']) {
+      xml += `<url><loc>${base}/${page}</loc><changefreq>weekly</changefreq><priority>0.85</priority></url>`;
+    }
     for (const p of results) {
       const lastmod = p.updated_at ? p.updated_at.slice(0, 10) : '';
       xml += `<url><loc>${base}/provider.html?id=${p.id}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}<changefreq>weekly</changefreq><priority>0.7</priority></url>`;

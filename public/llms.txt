@@ -8,6 +8,11 @@
 - 提交商家：https://dhapi.pages.dev/submit.html
 - 商家入口：https://dhapi.pages.dev/merchant.html
 - 推广合作：https://dhapi.pages.dev/sponsor.html
+- OpenAI API 专题：https://dhapi.pages.dev/openai-api.html
+- Claude API 专题：https://dhapi.pages.dev/claude-api.html
+- DeepSeek API 专题：https://dhapi.pages.dev/deepseek-api.html
+- 免费额度 API 专题：https://dhapi.pages.dev/free-api.html
+- 按量计费 API 专题：https://dhapi.pages.dev/pay-as-you-go-api.html
 - 站点地图：https://dhapi.pages.dev/sitemap.xml
 
 ## 站点内容

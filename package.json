@@ -7,7 +7,7 @@
     "start": "node backend/server.js",
     "dev": "nodemon backend/server.js",
     "check": "npm run check:js && npm run check:html && npm run check:schema",
-    "check:js": "node --check backend/server.js && node --check functions/api/[[route]].js && node --check functions/api/_lib/helpers.js && node --check functions/api/_lib/auth.js && node --check functions/api/_lib/upload.js && node --check functions/api/_lib/site-check.js && node --check functions/api/_lib/routes/public.js && node --check functions/api/_lib/routes/admin.js && node --check functions/api/_lib/routes/merchant.js && node --check workers/site-checker.js && node --check tools/d1-shim.cjs",
+    "check:js": "node --check backend/server.js && node --check functions/api/[[route]].js && node --check functions/api/_lib/helpers.js && node --check functions/api/_lib/auth.js && node --check functions/api/_lib/upload.js && node --check functions/api/_lib/site-check.js && node --check functions/api/_lib/routes/public.js && node --check functions/api/_lib/routes/admin.js && node --check functions/api/_lib/routes/merchant.js && node --check workers/site-checker.js && node --check tools/d1-shim.cjs && node --check public/topic.js",
     "check:html": "node tools/check-html.js",
     "check:schema": "node tools/check-schema.js",
     "test:smoke": "node tools/smoke-test.js",

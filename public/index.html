@@ -393,10 +393,21 @@ a:focus-visible, button:focus-visible, input:focus-visible {
 .growth-card .cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
 .growth-card .text-link { color: var(--accent); text-decoration: none; font-size: 14px; }
 .growth-card .text-link:hover { text-decoration: underline; }
+.topic-entry-grid {
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-top: 16px;
+}
+.topic-entry {
+  min-height: 44px; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); border-radius: 999px; background: var(--bg);
+  color: var(--accent); text-decoration: none; font-size: 13px; padding: 0 12px; text-align: center;
+}
+.topic-entry:hover { border-color: var(--accent); }
 @media (max-width: 860px) {
   .growth-grid, .growth-card.wide { grid-template-columns: 1fr; }
+  .topic-entry-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .growth-section { padding: 0 16px; }
 }
+@media (max-width: 460px) { .topic-entry-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -482,6 +493,13 @@ a:focus-visible, button:focus-visible, input:focus-visible {
       <div>
         <h2>怎么选 AI 模型 API 服务商？</h2>
         <p>先确认你需要官方直连还是聚合中转：官方直连适合追求来源明确、配置标准的团队；聚合中转适合需要多模型统一入口、国内访问更顺手、成本更灵活的开发者。再结合模型覆盖、计费方式、网站状态、评价和响应速度做横向比较。</p>
+        <div class="topic-entry-grid" aria-label="热门专题">
+          <a class="topic-entry" href="openai-api.html">OpenAI API</a>
+          <a class="topic-entry" href="claude-api.html">Claude API</a>
+          <a class="topic-entry" href="deepseek-api.html">DeepSeek API</a>
+          <a class="topic-entry" href="free-api.html">免费额度</a>
+          <a class="topic-entry" href="pay-as-you-go-api.html">按量计费</a>
+        </div>
       </div>
       <div class="cta-row">
         <a class="hero-action primary" href="#cardGrid">立即筛选服务商</a>
