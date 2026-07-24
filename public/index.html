@@ -19,6 +19,9 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"中转导航","description":"AI 模型 API 服务商导航与对比站","url":"https://dhapi.pages.dev/","inLanguage":"zh-CN","potentialAction":{"@type":"SearchAction","target":"https://dhapi.pages.dev/?q={search_term_string}","query-input":"required name=search_term_string"}}
 </script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"如何选择 AI 模型 API 服务商？","acceptedAnswer":{"@type":"Answer","text":"先按需要的模型、计费方式和服务类型筛选，再比较网站状态、信息完整度与用户评价；正式接入前请以服务商官网的最新说明为准。"}},{"@type":"Question","name":"可以免费提交服务商信息吗？","acceptedAnswer":{"@type":"Answer","text":"可以。提交基础信息后会进入审核，审核通过后可展示在首页搜索、分类筛选和服务商详情页。"}},{"@type":"Question","name":"网站状态代表什么？","acceptedAnswer":{"@type":"Answer","text":"网站状态来自定期访问检查，用于辅助判断官网是否可访问，不代表服务质量或接口可用性。"}}]}
+</script>
 <style>
 :root {
   --bg:      oklch(97% 0.012 80);
@@ -402,12 +405,16 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   color: var(--accent); text-decoration: none; font-size: 13px; padding: 0 12px; text-align: center;
 }
 .topic-entry:hover { border-color: var(--accent); }
+.faq-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+.faq-item { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.faq-item h3 { font-family: var(--font-display); font-size: 17px; margin-bottom: 8px; }
+.faq-item p { color: var(--muted); font-size: 14px; line-height: 1.7; }
 @media (max-width: 860px) {
   .growth-grid, .growth-card.wide { grid-template-columns: 1fr; }
-  .topic-entry-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .topic-entry-grid, .faq-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .growth-section { padding: 0 16px; }
 }
-@media (max-width: 460px) { .topic-entry-grid { grid-template-columns: 1fr; } }
+@media (max-width: 460px) { .topic-entry-grid, .faq-list { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -521,6 +528,32 @@ a:focus-visible, button:focus-visible, input:focus-visible {
         <li>信息包含模型覆盖、计费方式、简介和目标用户。</li>
         <li>支持用户评价、收藏和热度排行，方便持续更新。</li>
       </ul>
+    </article>
+  </div>
+</section>
+<section class="growth-section" aria-labelledby="faq-title">
+  <div class="growth-card wide">
+    <div>
+      <h2 id="faq-title">常见问题</h2>
+      <p>用这些要点快速开始筛选，并在接入前到服务商官网确认最新的模型、价格和使用说明。</p>
+    </div>
+    <div class="cta-row">
+      <a class="hero-action primary" href="#cardGrid">开始筛选服务商</a>
+      <a class="hero-action" href="submit.html">免费提交商家</a>
+    </div>
+  </div>
+  <div class="faq-list">
+    <article class="faq-item">
+      <h3>如何选择服务商？</h3>
+      <p>先按模型、计费方式和服务类型筛选，再结合网站状态、信息完整度与用户评价横向比较。</p>
+    </article>
+    <article class="faq-item">
+      <h3>可以免费提交吗？</h3>
+      <p>可以。提交基础信息并通过审核后，服务会进入首页搜索、分类筛选与详情展示。</p>
+    </article>
+    <article class="faq-item">
+      <h3>网站状态代表什么？</h3>
+      <p>它来自定期访问检查，可辅助判断官网是否可访问；不代表服务质量或接口可用性。</p>
     </article>
   </div>
 </section>
