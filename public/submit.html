@@ -4,7 +4,14 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>提交商家 — 中转导航</title>
+<title>免费提交 AI 模型 API 服务商 — 中转导航</title>
+<meta name="description" content="免费提交官方直连或聚合中转类 AI 模型 API 服务商信息，审核通过后展示在中转导航，获得搜索、筛选、评价和网站状态展示入口。" />
+<meta property="og:title" content="免费提交 AI 模型 API 服务商 — 中转导航" />
+<meta property="og:description" content="提交商家信息，审核通过后展示在中转导航，获得搜索、筛选、评价和网站状态展示入口。" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://dhapi.pages.dev/submit.html" />
+<meta property="og:image" content="https://dhapi.pages.dev/logos/site-logo.png" />
+<link rel="canonical" href="https://dhapi.pages.dev/submit.html" />
 <style>
 :root {
   --bg:      oklch(97% 0.012 80);
@@ -56,6 +63,19 @@ body { background: var(--bg); color: var(--fg); font-family: var(--font-body); l
 .page-header .subtitle {
   font-size: 15px; color: var(--muted); max-width: 440px; margin: 0 auto;
   line-height: 1.6;
+}
+.value-strip {
+  max-width: 760px; margin: 24px auto 0; padding: 0 24px;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;
+}
+.value-item {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px; text-align: left;
+}
+.value-item strong { display: block; font-size: 14px; margin-bottom: 4px; }
+.value-item span { display: block; font-size: 12px; color: var(--muted); line-height: 1.6; }
+@media (max-width: 680px) {
+  .value-strip { grid-template-columns: 1fr; padding: 0 16px; }
 }
 .form-container { max-width: 680px; margin: 0 auto; padding: 32px 24px 64px; }
 .form-section { margin-bottom: 36px; }
@@ -194,8 +214,13 @@ body { background: var(--bg); color: var(--fg); font-family: var(--font-body); l
   </div>
 </nav>
 <header class="page-header">
-  <h1>提交你的商家信息</h1>
-  <p class="subtitle">免费收录，无需登录。填写以下信息，审核通过后即可展示在导航站。</p>
+  <h1>免费提交 AI 模型 API 服务商</h1>
+  <p class="subtitle">官方直连与聚合中转都可以提交。审核通过后，你的服务会进入首页搜索、分类筛选、详情页和网站状态展示。</p>
+  <div class="value-strip" aria-label="收录权益">
+    <div class="value-item"><strong>获得导航曝光</strong><span>按模型、品牌、计费方式和分类出现在用户筛选结果中。</span></div>
+    <div class="value-item"><strong>建立信任信息</strong><span>展示网站状态、评分、评价和支持模型，帮助用户快速判断。</span></div>
+    <div class="value-item"><strong>后续可维护</strong><span>审核后可通过商家入口管理资料，保持信息更新。</span></div>
+  </div>
 </header>
 <div class="form-container">
   <div class="form-view" id="formView">

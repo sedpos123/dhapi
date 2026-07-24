@@ -4,9 +4,10 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>商家详情 — 中转导航</title>
-<meta name="description" content="查看大模型 API 中转商家详细信息，包括倍率定价、可用率监测、评分、用户评价和支持模型。" />
+<meta name="description" content="查看 AI 模型 API 服务商详细信息，包括支持模型、计费方式、网站状态、评分、用户评价和访问入口。" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="中转导航" />
+<meta property="og:image" content="https://dhapi.pages.dev/logos/site-logo.png" />
 <style>
 :root {
   --bg:      oklch(97% 0.012 80);
@@ -397,12 +398,34 @@ async function loadProvider() {
     if (!provider) { showError(); return; }
     document.title = provider.name + ' — 中转导航';
     const descMeta = document.querySelector('meta[name="description"]');
-    if (descMeta) { const models = (provider.supported_models || provider.brands || []).slice(0, 3).join('、'); descMeta.content = `${provider.name} - ${provider.category || 'API中转'}，${provider.avg_rating > 0 ? '评分' + provider.avg_rating + '分，' : ''}支持${models}等模型。查看倍率定价与可用率监测。`; }
+    if (descMeta) { const models = (provider.supported_models || provider.brands || []).slice(0, 3).join('、'); descMeta.content = `${provider.name} - ${provider.category || 'API服务'}，${provider.avg_rating > 0 ? '评分' + provider.avg_rating + '分，' : ''}支持${models}等模型。查看计费方式、网站状态和用户评价。`; }
+    const canonical = document.querySelector('link[rel="canonical"]') || (() => { const l = document.createElement('link'); l.rel = 'canonical'; document.head.appendChild(l); return l; })();
+    canonical.href = location.origin + location.pathname + '?id=' + encodeURIComponent(provider.id);
     const ogTitle = document.querySelector('meta[property="og:title"]') || (() => { const m = document.createElement('meta'); m.setAttribute('property', 'og:title'); document.head.appendChild(m); return m; })();
     ogTitle.content = provider.name + ' - 中转导航';
+    const ogDesc = document.querySelector('meta[property="og:description"]') || (() => { const m = document.createElement('meta'); m.setAttribute('property', 'og:description'); document.head.appendChild(m); return m; })();
+    ogDesc.content = descMeta ? descMeta.content : provider.desc || '';
     const ld = document.createElement('script');
     ld.type = 'application/ld+json';
-    ld.textContent = JSON.stringify({"@context":"https://schema.org","@type":"LocalBusiness","name":provider.name,"description":provider.desc||'',"url":provider.url||'',"aggregateRating": provider.review_count > 0 ? {"@type":"AggregateRating","ratingValue":provider.avg_rating,"reviewCount":provider.review_count} : undefined});
+    ld.textContent = JSON.stringify({
+      "@context":"https://schema.org",
+      "@graph":[
+        {
+          "@type":"Organization",
+          "name":provider.name,
+          "description":provider.desc||"",
+          "url":provider.url||"",
+          "aggregateRating": provider.review_count > 0 ? {"@type":"AggregateRating","ratingValue":provider.avg_rating,"reviewCount":provider.review_count} : undefined
+        },
+        {
+          "@type":"BreadcrumbList",
+          "itemListElement":[
+            {"@type":"ListItem","position":1,"name":"首页","item":location.origin + "/"},
+            {"@type":"ListItem","position":2,"name":provider.name,"item":canonical.href}
+          ]
+        }
+      ]
+    });
     document.head.appendChild(ld);
     renderProvider();
     let mon = null;

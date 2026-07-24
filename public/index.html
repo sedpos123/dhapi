@@ -4,17 +4,20 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>中转导航 — 大模型 API 中转商家导航</title>
-<meta name="description" content="大模型 API 中转商家导航站，汇集 OpenAI、Claude、Gemini 等主流模型中转服务商，提供价格对比、用户评价、商家排名，帮你找到最适合的 API 中转服务。" />
-<meta name="keywords" content="大模型API,API中转,OpenAI中转,Claude中转,GPT中转,API代理,LLM API,中转导航" />
-<meta property="og:title" content="中转导航 — 大模型 API 中转商家导航" />
-<meta property="og:description" content="汇集主流模型中转服务商，提供价格对比、用户评价、商家排名" />
+<title>中转导航 — AI 模型 API 服务商导航与对比</title>
+<meta name="description" content="中转导航收录官方直连与聚合中转类 AI 模型 API 服务商，支持按模型、品牌、计费方式、网站状态、评分和热度筛选，帮助开发者快速选择合适服务。" />
+<meta name="keywords" content="AI模型API,大模型API,API中转,官方直连,聚合中转,OpenAI API,Claude API,Gemini API,LLM API,API服务商导航" />
+<meta property="og:title" content="中转导航 — AI 模型 API 服务商导航与对比" />
+<meta property="og:description" content="收录官方直连与聚合中转类 AI 模型 API 服务商，支持价格、模型、评分、热度和网站状态对比。" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://dhapi.pages.dev/" />
+<meta property="og:image" content="https://dhapi.pages.dev/logos/site-logo.png" />
 <meta name="twitter:card" content="summary" />
 <link rel="canonical" href="https://dhapi.pages.dev/" />
+<link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+<link rel="alternate" type="text/plain" href="/llms.txt" title="中转导航站点说明" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebSite","name":"中转导航","description":"大模型 API 中转商家导航站","url":"https://dhapi.pages.dev/","potentialAction":{"@type":"SearchAction","target":"https://dhapi.pages.dev/?q={search_term_string}","query-input":"required name=search_term_string"}}
+{"@context":"https://schema.org","@type":"WebSite","name":"中转导航","description":"AI 模型 API 服务商导航与对比站","url":"https://dhapi.pages.dev/","inLanguage":"zh-CN","potentialAction":{"@type":"SearchAction","target":"https://dhapi.pages.dev/?q={search_term_string}","query-input":"required name=search_term_string"}}
 </script>
 <style>
 :root {
@@ -78,6 +81,18 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   font-size: 16px; color: var(--muted); max-width: 520px; margin: 0 auto 28px;
   line-height: 1.6;
 }
+.hero-actions {
+  display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 18px;
+}
+.hero-action {
+  min-height: 40px; display: inline-flex; align-items: center; justify-content: center;
+  padding: 0 16px; border-radius: 999px; text-decoration: none; font-size: 13px;
+  border: 1px solid var(--border); color: var(--fg); background: var(--surface);
+  transition: border-color .15s, color .15s, transform .15s;
+}
+.hero-action.primary { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+.hero-action:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+.hero-action.primary:hover { color: var(--surface); opacity: .9; }
 .search-box { max-width: 560px; margin: 0 auto; position: relative; }
 .search-box input {
   width: 100%; padding: 12px 16px 12px 44px;
@@ -356,6 +371,32 @@ a:focus-visible, button:focus-visible, input:focus-visible {
 }
 .site-footer a { color: var(--accent); text-decoration: none; }
 .site-footer a:hover { text-decoration: underline; }
+.growth-section {
+  max-width: 1280px; margin: 36px auto 0; padding: 0 24px;
+}
+.growth-grid {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px;
+}
+.growth-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 20px; box-shadow: 0 1px 2px oklch(20% 0.02 60 / 0.03);
+}
+.growth-card h2, .growth-card h3 {
+  font-family: var(--font-display); font-size: 20px; line-height: 1.25;
+  letter-spacing: -0.01em; margin-bottom: 10px;
+}
+.growth-card p, .growth-card li { color: var(--muted); font-size: 14px; line-height: 1.7; }
+.growth-card ul { padding-left: 18px; }
+.growth-card.wide {
+  grid-column: 1 / -1; display: grid; grid-template-columns: 1.2fr .8fr; gap: 20px; align-items: center;
+}
+.growth-card .cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+.growth-card .text-link { color: var(--accent); text-decoration: none; font-size: 14px; }
+.growth-card .text-link:hover { text-decoration: underline; }
+@media (max-width: 860px) {
+  .growth-grid, .growth-card.wide { grid-template-columns: 1fr; }
+  .growth-section { padding: 0 16px; }
+}
 </style>
 </head>
 <body>
@@ -369,11 +410,15 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   </div>
 </nav>
 <header class="hero">
-  <h1>大模型 API 中转商家导航</h1>
-  <p class="subtitle">收录国内可用的大模型中转服务商，按计费方式、模型、分类筛选，找到最适合你的那一家</p>
+  <h1>AI 模型 API 服务商导航与对比</h1>
+  <p class="subtitle">收录官方直连与聚合中转服务，按模型、分类、计费方式、评分和网站状态筛选，帮开发者更快找到合适入口。</p>
   <div class="search-box">
     <span class="icon">⌕</span>
-    <input type="text" id="searchInput" placeholder="搜索商家名称、品牌、模型、标签…" />
+    <input type="text" id="searchInput" placeholder="搜索 OpenAI、Claude、Gemini、按量计费、免费额度…" aria-label="搜索商家、品牌、模型和标签" />
+  </div>
+  <div class="hero-actions">
+    <a class="hero-action primary" href="submit.html">免费提交商家</a>
+    <a class="hero-action" href="#selection-guide">查看选型指南</a>
   </div>
   <div class="stats-row">
     <div class="stat-item"><span class="num" id="statProviders">0</span>收录商家</div>
@@ -429,8 +474,38 @@ a:focus-visible, button:focus-visible, input:focus-visible {
     </div>
   </main>
 </div>
+<section class="growth-section" aria-labelledby="selection-guide">
+  <div class="growth-grid">
+    <article class="growth-card wide" id="selection-guide">
+      <div>
+        <h2>怎么选 AI 模型 API 服务商？</h2>
+        <p>先确认你需要官方直连还是聚合中转：官方直连适合追求来源明确、配置标准的团队；聚合中转适合需要多模型统一入口、国内访问更顺手、成本更灵活的开发者。再结合模型覆盖、计费方式、网站状态、评价和响应速度做横向比较。</p>
+      </div>
+      <div class="cta-row">
+        <a class="hero-action primary" href="#cardGrid">立即筛选服务商</a>
+        <a class="hero-action" href="submit.html">我要补充商家</a>
+      </div>
+    </article>
+    <article class="growth-card">
+      <h3>官方直连</h3>
+      <p>指模型官方提供的 API 官网入口，适合重视官方文档、账号体系和长期稳定性的使用场景。</p>
+    </article>
+    <article class="growth-card">
+      <h3>聚合中转</h3>
+      <p>指非官方但支持多模型聚合的服务商，常见优势是统一额度、统一接口、多品牌模型集中管理。</p>
+    </article>
+    <article class="growth-card">
+      <h3>收录标准</h3>
+      <ul>
+        <li>官网链接可访问，并每天自动检查网站状态。</li>
+        <li>信息包含模型覆盖、计费方式、简介和目标用户。</li>
+        <li>支持用户评价、收藏和热度排行，方便持续更新。</li>
+      </ul>
+    </article>
+  </div>
+</section>
 <footer class="site-footer">
-  <p>数据仅供参考，请以商家官网为准。如有更新或纠错，<a href="submit.html">提交反馈</a>。</p>
+  <p>数据仅供参考，请以商家官网为准。如有新商家、信息更新或纠错，<a href="submit.html">提交反馈</a>。</p>
 </footer>
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal" id="modalContent"></div>
