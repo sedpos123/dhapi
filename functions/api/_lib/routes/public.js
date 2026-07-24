@@ -15,7 +15,7 @@ export function applyPublicRoutes(app) {
     xml += `<url><loc>${base}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>`;
     xml += `<url><loc>${base}/submit.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>`;
     xml += `<url><loc>${base}/sponsor.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`;
-    for (const page of ['openai-api', 'claude-api', 'deepseek-api', 'free-api', 'pay-as-you-go-api']) {
+    for (const page of ['api-relay', 'ai-api-relay', 'openai-relay', 'claude-relay', 'gemini-relay', 'cheap-api-relay', 'stable-api-relay', 'openai-api', 'claude-api', 'deepseek-api', 'free-api', 'pay-as-you-go-api']) {
       xml += `<url><loc>${base}/${page}</loc><changefreq>weekly</changefreq><priority>0.85</priority></url>`;
     }
     for (const p of results) {

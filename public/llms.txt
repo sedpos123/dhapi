@@ -1,6 +1,6 @@
 # 中转导航
 
-中转导航是一个中文 AI 模型 API 服务商导航与对比站，收录官方直连与聚合中转类服务，帮助开发者按模型、品牌、计费方式、评分、热度和网站状态筛选。
+中转导航是一个中文 AI API 聚合中转站导航与对比站，主要收录聚合中转服务，官方直连作为参考分类保留，帮助开发者按模型、品牌、计费方式、评分、热度和网站状态筛选。
 
 ## 主要页面
 
@@ -8,6 +8,13 @@
 - 提交商家：https://dhapi.pages.dev/submit.html
 - 商家入口：https://dhapi.pages.dev/merchant.html
 - 推广合作：https://dhapi.pages.dev/sponsor.html
+- 聚合中转站专题：https://dhapi.pages.dev/api-relay
+- AI API 聚合平台专题：https://dhapi.pages.dev/ai-api-relay
+- OpenAI 中转站专题：https://dhapi.pages.dev/openai-relay
+- Claude 中转站专题：https://dhapi.pages.dev/claude-relay
+- Gemini 中转站专题：https://dhapi.pages.dev/gemini-relay
+- 低成本中转站专题：https://dhapi.pages.dev/cheap-api-relay
+- 稳定中转站专题：https://dhapi.pages.dev/stable-api-relay
 - OpenAI API 专题：https://dhapi.pages.dev/openai-api
 - Claude API 专题：https://dhapi.pages.dev/claude-api
 - DeepSeek API 专题：https://dhapi.pages.dev/deepseek-api
@@ -17,8 +24,8 @@
 
 ## 站点内容
 
-- 官方直连：模型官方提供的 API 官网入口。
-- 聚合中转：非官方但支持多模型聚合的 API 服务商。
+- 聚合中转：本站主要收录方向，指非官方直连、支持多模型聚合或统一接入的 API 服务商。
+- 官方直连：模型官方提供的 API 官网入口，作为参考分类保留。
 - 商家详情：包含简介、支持模型、计费方式、网站状态、评分、评价与访问入口。
 - 网站状态：系统每天自动检查一次，连续 7 天异常的商家不再展示。
 

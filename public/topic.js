@@ -22,9 +22,10 @@ function matchesTopic(provider) {
   ].join(' ').toLowerCase();
   const keywords = (config.keywords || []).map(k => String(k).toLowerCase());
   const keywordMatch = keywords.length ? keywords.some(k => haystack.includes(k)) : true;
+  const categoryMatch = config.category ? provider.category === config.category : true;
   const billingMatch = config.billing_type ? provider.billing_type === config.billing_type : true;
   const freeMatch = config.free_quota ? !!provider.free_quota : true;
-  return keywordMatch && billingMatch && freeMatch;
+  return categoryMatch && keywordMatch && billingMatch && freeMatch;
 }
 
 function statusLabel(provider) {
@@ -34,7 +35,17 @@ function statusLabel(provider) {
 
 function renderProviders(providers) {
   const grid = document.getElementById('providerGrid');
-  const list = providers.filter(matchesTopic);
+  const list = providers.filter(matchesTopic).sort((a, b) => {
+    if (config.preferAggregator && a.category !== b.category) {
+      if (a.category === '聚合中转') return -1;
+      if (b.category === '聚合中转') return 1;
+    }
+    if ((a.site_status || '') !== (b.site_status || '')) {
+      if (a.site_status === 'ok') return -1;
+      if (b.site_status === 'ok') return 1;
+    }
+    return (a.sort_order || 0) - (b.sort_order || 0);
+  });
   document.getElementById('topicCount').textContent = list.length;
   document.getElementById('topicOk').textContent = list.filter(p => p.site_status === 'ok').length;
   if (!list.length) {
@@ -59,6 +70,13 @@ function renderProviders(providers) {
 function renderRelatedTopics() {
   const current = config.slug || '';
   const topics = [
+    ['api-relay', '聚合中转站总览'],
+    ['ai-api-relay', 'AI API 聚合平台'],
+    ['openai-relay', 'OpenAI 中转站'],
+    ['claude-relay', 'Claude 中转站'],
+    ['gemini-relay', 'Gemini 中转站'],
+    ['cheap-api-relay', '低成本中转站'],
+    ['stable-api-relay', '稳定中转站'],
     ['openai-api', 'OpenAI API 服务商'],
     ['claude-api', 'Claude API 服务商'],
     ['deepseek-api', 'DeepSeek API 服务商'],
