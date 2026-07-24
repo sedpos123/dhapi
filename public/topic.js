@@ -59,11 +59,11 @@ function renderProviders(providers) {
 function renderRelatedTopics() {
   const current = config.slug || '';
   const topics = [
-    ['openai-api.html', 'OpenAI API 服务商'],
-    ['claude-api.html', 'Claude API 服务商'],
-    ['deepseek-api.html', 'DeepSeek API 服务商'],
-    ['free-api.html', '免费额度 API 服务商'],
-    ['pay-as-you-go-api.html', '按量计费 API 服务商']
+    ['openai-api', 'OpenAI API 服务商'],
+    ['claude-api', 'Claude API 服务商'],
+    ['deepseek-api', 'DeepSeek API 服务商'],
+    ['free-api', '免费额度 API 服务商'],
+    ['pay-as-you-go-api', '按量计费 API 服务商']
   ].filter(([href]) => href !== current);
   document.getElementById('relatedTopics').innerHTML = topics.map(([href, label]) => `<a href="${href}">${label}</a>`).join('');
 }
