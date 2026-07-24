@@ -14,6 +14,7 @@ export function applyPublicRoutes(app) {
     xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
     xml += `<url><loc>${base}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>`;
     xml += `<url><loc>${base}/submit.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>`;
+    xml += `<url><loc>${base}/sponsor.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`;
     for (const p of results) {
       const lastmod = p.updated_at ? p.updated_at.slice(0, 10) : '';
       xml += `<url><loc>${base}/provider.html?id=${p.id}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}<changefreq>weekly</changefreq><priority>0.7</priority></url>`;
@@ -85,6 +86,52 @@ export function applyPublicRoutes(app) {
     const modelsArr = cleanStringArray(body.supported_models).length ? cleanStringArray(body.supported_models) : brandsArr;
     await db.prepare(`INSERT INTO pending_submissions (name, url, category, desc, brands, features, input_price, output_price, contact_email, contact_wechat, extra_note, logo_color, logo_url, billing_type, supported_models, target_audience, free_quota) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(name, url, category, desc, JSON.stringify(brandsArr), JSON.stringify(featuresArr), input_price, output_price, contact_email, contact_wechat, extra_note, logo_color || '#888', logo_url, billing_type, JSON.stringify(modelsArr), target_audience, free_quota ? 1 : 0).run();
     return c.json({ success: true, message: '提交成功，我们会尽快审核' });
+  });
+
+  // ── Sponsor Leads：合作推广意向 ──
+  app.post('/sponsor-leads', async (c) => {
+    const db = c.env.DB;
+    const body = await c.req.json();
+    const providerName = cleanText(body.provider_name, 120);
+    const websiteUrl = cleanText(body.website_url, 2048);
+    const contactName = cleanText(body.contact_name, 80);
+    const contactEmail = cleanText(body.contact_email, 254);
+    const contactWechat = cleanText(body.contact_wechat, 100);
+    const packageCode = cleanText(body.package_code, 40);
+    const budget = cleanText(body.budget, 80);
+    const message = cleanText(body.message, 1000);
+    const source = cleanText(body.source, 80) || 'sponsor-page';
+    if (!providerName) return c.json({ error: '请填写商家名称' }, 400);
+    if (websiteUrl && !isHttpUrl(websiteUrl)) return c.json({ error: '请填写有效的 http 或 https 网址' }, 400);
+    if (!contactEmail && !contactWechat) return c.json({ error: '请至少填写邮箱或微信' }, 400);
+    if (contactEmail && !isEmail(contactEmail)) return c.json({ error: '请填写有效邮箱' }, 400);
+    try {
+      await db.prepare(`INSERT INTO sponsor_leads (provider_name, website_url, contact_name, contact_email, contact_wechat, package_code, budget, message, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        providerName, websiteUrl, contactName, contactEmail, contactWechat, packageCode, budget, message, source
+      ).run();
+    } catch (err) {
+      const extraNote = JSON.stringify({ type: 'sponsor_lead', package_code: packageCode, budget, message, source });
+      await db.prepare(`INSERT INTO pending_submissions (name, url, category, desc, brands, features, input_price, output_price, contact_email, contact_wechat, extra_note, logo_color, billing_type, supported_models, target_audience, free_quota, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        providerName,
+        websiteUrl || '#',
+        '聚合中转',
+        '商家推广合作意向',
+        '[]',
+        '[]',
+        '合作意向',
+        '',
+        contactEmail,
+        contactWechat,
+        extraNote,
+        '#888',
+        '',
+        '[]',
+        '',
+        0,
+        'pending'
+      ).run();
+    }
+    return c.json({ success: true, message: '合作意向已收到，我们会尽快联系你' });
   });
 
   // ── Redirect (click tracking) ──

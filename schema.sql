@@ -107,6 +107,21 @@ CREATE TABLE IF NOT EXISTS provider_monitoring (
   FOREIGN KEY (provider_id) REFERENCES providers(id)
 );
 
+CREATE TABLE IF NOT EXISTS sponsor_leads (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  provider_name  TEXT NOT NULL,
+  website_url    TEXT DEFAULT '',
+  contact_name   TEXT DEFAULT '',
+  contact_email  TEXT DEFAULT '',
+  contact_wechat TEXT DEFAULT '',
+  package_code   TEXT DEFAULT '',
+  budget         TEXT DEFAULT '',
+  message        TEXT DEFAULT '',
+  source         TEXT DEFAULT '',
+  status         TEXT DEFAULT 'new',
+  created_at     TEXT DEFAULT (datetime('now','localtime'))
+);
+
 CREATE INDEX IF NOT EXISTS idx_providers_online_sort ON providers(online, sort_order);
 CREATE INDEX IF NOT EXISTS idx_providers_category ON providers(category);
 CREATE INDEX IF NOT EXISTS idx_providers_site_status ON providers(site_status);
@@ -114,3 +129,4 @@ CREATE INDEX IF NOT EXISTS idx_pending_status_submitted ON pending_submissions(s
 CREATE INDEX IF NOT EXISTS idx_reviews_provider_status ON reviews(provider_id, status);
 CREATE INDEX IF NOT EXISTS idx_merchants_provider_status ON merchants(provider_id, status);
 CREATE INDEX IF NOT EXISTS idx_monitoring_provider ON provider_monitoring(provider_id, checked_at);
+CREATE INDEX IF NOT EXISTS idx_sponsor_leads_status_created ON sponsor_leads(status, created_at DESC);

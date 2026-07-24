@@ -14,6 +14,11 @@ async function recalcProviderRating(db, providerId) {
 }
 
 export function applyAdminRoutes(app) {
+  async function hasTable(db, name) {
+    const row = await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name = ?").bind(name).first();
+    return !!row;
+  }
+
   // ── Admin Login (no auth required) ──
   app.post('/admin/login', async (c) => {
     const { password } = await c.req.json();
@@ -226,6 +231,7 @@ export function applyAdminRoutes(app) {
       db.prepare('SELECT * FROM merchants').all(),
       db.prepare('SELECT * FROM provider_monitoring').all(),
     ]);
+    const sponsorLeads = await hasTable(db, 'sponsor_leads') ? await db.prepare('SELECT * FROM sponsor_leads').all() : { results: [] };
     return c.json({
       providers: providers.results,
       brands: brands.results,
@@ -233,16 +239,19 @@ export function applyAdminRoutes(app) {
       pending: pending.results,
       reviews: reviews.results,
       merchants: merchants.results,
-      monitoring: monitoring.results
+      monitoring: monitoring.results,
+      sponsor_leads: sponsorLeads.results
     });
   });
 
-  // ── Data Import：全部 7 张业务表，providers/pending 补全所有列 ──
+  // ── Data Import：全部业务表，providers/pending 补全所有列 ──
   app.post('/admin/import', async (c) => {
     const db = c.env.DB;
-    const { providers, brands, categories, pending, reviews, merchants, monitoring } = await c.req.json();
+    const { providers, brands, categories, pending, reviews, merchants, monitoring, sponsor_leads } = await c.req.json();
     // 先清空全部表（子先父后，FK-safe），再做全量替换导入
-    for (const t of ['reviews', 'merchants', 'provider_monitoring', 'pending_submissions', 'providers', 'brands', 'categories']) {
+    const tablesToClear = ['reviews', 'merchants', 'provider_monitoring', 'pending_submissions', 'providers', 'brands', 'categories'];
+    if (await hasTable(db, 'sponsor_leads')) tablesToClear.splice(3, 0, 'sponsor_leads');
+    for (const t of tablesToClear) {
       await db.prepare(`DELETE FROM ${t}`).run();
     }
     // 插入按父先子后，避免外键引用落空
@@ -273,16 +282,36 @@ export function applyAdminRoutes(app) {
         mo.id, mo.provider_id, mo.family, mo.availability, mo.latency_recent, mo.latency_7d, mo.cache_hit_rate, mo.sample_count, mo.source, mo.note, mo.checked_at
       ).run();
     } }
+    if (sponsor_leads && await hasTable(db, 'sponsor_leads')) { for (const lead of sponsor_leads) {
+      await db.prepare(`INSERT OR REPLACE INTO sponsor_leads (id, provider_name, website_url, contact_name, contact_email, contact_wechat, package_code, budget, message, source, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        lead.id, lead.provider_name, lead.website_url || '', lead.contact_name || '', lead.contact_email || '', lead.contact_wechat || '', lead.package_code || '', lead.budget || '', lead.message || '', lead.source || '', lead.status || 'new', lead.created_at || ''
+      ).run();
+    } }
     return c.json({ success: true });
   });
 
-  // ── Reset：清空全部 7 张业务表（子先父后，FK-safe，含 merchants 避免孤儿） ──
+  // ── Reset：清空全部业务表（子先父后，FK-safe，含 merchants 避免孤儿） ──
   app.post('/admin/reset', async (c) => {
     const db = c.env.DB;
-    for (const t of ['reviews', 'merchants', 'provider_monitoring', 'pending_submissions', 'providers', 'brands', 'categories']) {
+    const tablesToClear = ['reviews', 'merchants', 'provider_monitoring', 'pending_submissions', 'providers', 'brands', 'categories'];
+    if (await hasTable(db, 'sponsor_leads')) tablesToClear.splice(3, 0, 'sponsor_leads');
+    for (const t of tablesToClear) {
       await db.prepare(`DELETE FROM ${t}`).run();
     }
     return c.json({ success: true });
+  });
+
+  // ── Sponsor Leads: Admin API ──
+  app.get('/admin/sponsor-leads', async (c) => {
+    const db = c.env.DB;
+    if (!await hasTable(db, 'sponsor_leads')) return c.json({ leads: [] });
+    const status = c.req.query('status') || '';
+    const sql = status
+      ? 'SELECT * FROM sponsor_leads WHERE status = ? ORDER BY created_at DESC LIMIT 200'
+      : 'SELECT * FROM sponsor_leads ORDER BY created_at DESC LIMIT 200';
+    const stmt = db.prepare(sql);
+    const { results } = status ? await stmt.bind(status).all() : await stmt.all();
+    return c.json({ leads: results || [] });
   });
 
   // ── Reviews: Admin API ──

@@ -7,6 +7,7 @@
 - 首页：https://dhapi.pages.dev/
 - 提交商家：https://dhapi.pages.dev/submit.html
 - 商家入口：https://dhapi.pages.dev/merchant.html
+- 推广合作：https://dhapi.pages.dev/sponsor.html
 - 站点地图：https://dhapi.pages.dev/sitemap.xml
 
 ## 站点内容
