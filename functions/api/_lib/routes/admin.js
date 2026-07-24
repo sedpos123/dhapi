@@ -314,6 +314,20 @@ export function applyAdminRoutes(app) {
     return c.json({ leads: results || [] });
   });
 
+  app.patch('/admin/sponsor-leads/:id/status', async (c) => {
+    const db = c.env.DB;
+    if (!await hasTable(db, 'sponsor_leads')) return c.json({ error: '合作线索表未初始化' }, 400);
+    const id = c.req.param('id');
+    const body = await c.req.json();
+    const status = cleanText(body.status, 40);
+    const allowed = new Set(['new', 'contacted', 'won', 'lost']);
+    if (!allowed.has(status)) return c.json({ error: '状态不正确' }, 400);
+    const row = await db.prepare('SELECT id FROM sponsor_leads WHERE id = ?').bind(id).first();
+    if (!row) return c.json({ error: '合作线索不存在' }, 404);
+    await db.prepare('UPDATE sponsor_leads SET status = ? WHERE id = ?').bind(status, id).run();
+    return c.json({ success: true });
+  });
+
   // ── Reviews: Admin API ──
   app.get('/admin/reviews', async (c) => {
     const db = c.env.DB;

@@ -326,6 +326,7 @@ body { background: var(--bg); color: var(--fg); font-family: var(--font-body); l
       <div class="nav-tab" data-tab="pending"><span class="tab-icon">⊡</span> 提交审核<span class="tab-badge" id="pendingBadge" style="display:none">0</span></div>
       <div class="nav-tab" data-tab="reviews"><span class="tab-icon">★</span> 评价审核<span class="tab-badge" id="reviewBadge" style="display:none">0</span></div>
       <div class="nav-tab" data-tab="merchants"><span class="tab-icon">👤</span> 商家认领<span class="tab-badge" id="merchantBadge" style="display:none">0</span></div>
+      <div class="nav-tab" data-tab="sponsors"><span class="tab-icon">¥</span> 合作线索<span class="tab-badge" id="sponsorBadge" style="display:none">0</span></div>
       <div class="nav-tab" data-tab="data"><span class="tab-icon">⬍</span> 数据管理</div>
     </nav>
     <div class="sidebar-footer">
@@ -343,6 +344,7 @@ body { background: var(--bg); color: var(--fg); font-family: var(--font-body); l
     <button data-tab="pending">审核</button>
     <button data-tab="reviews">评价</button>
     <button data-tab="merchants">认领</button>
+    <button data-tab="sponsors">合作</button>
     <button data-tab="data">数据</button>
   </div>
 
@@ -431,6 +433,20 @@ body { background: var(--bg); color: var(--fg); font-family: var(--font-body); l
       <h2 class="page-title">商家认领</h2>
       <p class="page-desc">审核商家认领申请，通过后商家可自助管理信息</p>
       <div id="merchantList"></div>
+    </div>
+
+    <!-- SPONSORS -->
+    <div class="tab-content" id="tab-sponsors">
+      <h2 class="page-title">合作线索</h2>
+      <p class="page-desc">管理推广合作、认证展示和专题合作意向</p>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+        <button class="btn sm primary" id="sponsorFilterAll" onclick="setSponsorFilter('')">全部</button>
+        <button class="btn sm" id="sponsorFilterNew" onclick="setSponsorFilter('new')">新线索</button>
+        <button class="btn sm" id="sponsorFilterContacted" onclick="setSponsorFilter('contacted')">跟进中</button>
+        <button class="btn sm" id="sponsorFilterWon" onclick="setSponsorFilter('won')">已成交</button>
+        <button class="btn sm" id="sponsorFilterLost" onclick="setSponsorFilter('lost')">未成交</button>
+      </div>
+      <div id="sponsorLeadList"></div>
     </div>
 
     <!-- DATA -->
@@ -626,8 +642,9 @@ document.querySelectorAll('.nav-tab').forEach(el => el.addEventListener('click',
 document.querySelectorAll('.mobile-tab-bar button').forEach(el => el.addEventListener('click', () => switchTab(el.dataset.tab)));
 
 /* ========== DATA CACHE ========== */
-let _providers = [], _brands = [], _categories = [], _pending = [], _reviews = [], _merchants = [];
+let _providers = [], _brands = [], _categories = [], _pending = [], _reviews = [], _merchants = [], _sponsorLeads = [];
 let _reviewStatus = 'pending';
+let _sponsorStatus = '';
 
 async function refreshAll() {
   try {
@@ -637,7 +654,8 @@ async function refreshAll() {
       api('/api/admin/categories').then(r => r.json()),
       api('/api/admin/pending').then(r => r.json()),
       api('/api/admin/reviews?status=pending').then(r => r.json()).catch(() => ({ reviews: [] })),
-      api('/api/admin/merchants').then(r => r.json()).catch(() => ({ merchants: [] }))
+      api('/api/admin/merchants').then(r => r.json()).catch(() => ({ merchants: [] })),
+      api('/api/admin/sponsor-leads').then(r => r.json()).catch(() => ({ leads: [] }))
     ]);
     _providers = pRes.providers || [];
     _brands = bRes.brands || [];
@@ -645,6 +663,7 @@ async function refreshAll() {
     _pending = pendRes.pending || [];
     _reviews = revRes.reviews || [];
     _merchants = merchRes.merchants || [];
+    _sponsorLeads = sponsorRes.leads || [];
     renderOverview();
     renderProviderTable();
     renderBrandTable();
@@ -653,11 +672,15 @@ async function refreshAll() {
     updatePendingBadge();
     updateReviewBadge();
     updateMerchantBadge();
+    updateSponsorBadge();
     if (document.getElementById('tab-reviews').classList.contains('active')) {
       renderReviewList();
     }
     if (document.getElementById('tab-merchants').classList.contains('active')) {
       renderMerchantList();
+    }
+    if (document.getElementById('tab-sponsors').classList.contains('active')) {
+      renderSponsorLeadList();
     }
   } catch (e) {
     if (e.message !== 'Unauthorized') console.error('refreshAll error:', e);
@@ -1300,6 +1323,13 @@ function updateMerchantBadge() {
   badge.style.display = pendingCount > 0 ? 'inline' : 'none';
 }
 
+function updateSponsorBadge() {
+  const badge = document.getElementById('sponsorBadge');
+  const newCount = _sponsorLeads.filter(l => (l.status || 'new') === 'new').length;
+  badge.textContent = newCount;
+  badge.style.display = newCount > 0 ? 'inline' : 'none';
+}
+
 function renderMerchantList() {
   const el = document.getElementById('merchantList');
   if (!_merchants.length) {
@@ -1331,6 +1361,62 @@ function renderMerchantList() {
       `}
     </div>
   `).join('');
+}
+
+/* ========== SPONSOR LEADS ========== */
+function sponsorStatusLabel(status) {
+  return { new: '新线索', contacted: '跟进中', won: '已成交', lost: '未成交' }[status || 'new'] || '新线索';
+}
+function sponsorPackageLabel(code) {
+  return { trial: '7天体验位 ¥199', verified: '认证展示 ¥699/月', topic: '专题合作 ¥1299/期', custom: '其他合作' }[code || ''] || (code || '未选择');
+}
+function setSponsorFilter(status) {
+  _sponsorStatus = status || '';
+  ['All', 'New', 'Contacted', 'Won', 'Lost'].forEach(name => {
+    const id = 'sponsorFilter' + name;
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    const target = name === 'All' ? '' : name.toLowerCase();
+    btn.className = 'btn sm' + (target === _sponsorStatus ? ' primary' : '');
+  });
+  renderSponsorLeadList();
+}
+function renderSponsorLeadList() {
+  const el = document.getElementById('sponsorLeadList');
+  const list = _sponsorStatus ? _sponsorLeads.filter(l => (l.status || 'new') === _sponsorStatus) : _sponsorLeads;
+  if (!list.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">¥</div><p>暂无合作线索</p></div>';
+    return;
+  }
+  el.innerHTML = list.map(lead => `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap;">
+        <span style="font-weight:600;font-size:15px;">${esc(lead.provider_name || '—')}</span>
+        <span class="status-pill pending">${sponsorStatusLabel(lead.status)}</span>
+        <span style="font-family:var(--font-mono);font-size:12px;color:var(--accent);">${sponsorPackageLabel(lead.package_code)}</span>
+        <span style="margin-inline-start:auto;font-size:12px;color:var(--muted);">${lead.created_at || ''}</span>
+      </div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">${esc(lead.message || lead.budget || '暂无补充说明')}</p>
+      <div style="font-size:12px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
+        <span>官网：${lead.website_url ? `<a href="${esc(lead.website_url)}" target="_blank" rel="noopener" style="color:var(--accent);">${esc(lead.website_url)}</a>` : '—'}</span>
+        <span>联系人：${esc(lead.contact_name || '—')}</span>
+        <span>邮箱：${esc(lead.contact_email || '—')}</span>
+        <span>微信：${esc(lead.contact_wechat || '—')}</span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn sm" onclick="updateSponsorLeadStatus(${lead.id}, 'contacted')">标记跟进中</button>
+        <button class="btn sm primary" onclick="updateSponsorLeadStatus(${lead.id}, 'won')">标记已成交</button>
+        <button class="btn sm danger" onclick="updateSponsorLeadStatus(${lead.id}, 'lost')">标记未成交</button>
+      </div>
+    </div>
+  `).join('');
+}
+async function updateSponsorLeadStatus(id, status) {
+  try {
+    await api('/api/admin/sponsor-leads/' + id + '/status', { method: 'PATCH', body: { status } });
+    toast('合作线索状态已更新');
+    refreshAll();
+  } catch { toast('操作失败', 'error'); }
 }
 
 async function approveMerchant(id) {
