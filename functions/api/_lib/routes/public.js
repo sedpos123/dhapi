@@ -13,6 +13,7 @@ export function applyPublicRoutes(app) {
     let xml = '<?xml version="1.0" encoding="UTF-8"?>';
     xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
     xml += `<url><loc>${base}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>`;
+    xml += `<url><loc>${base}/answers.html</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>`;
     xml += `<url><loc>${base}/submit.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>`;
     xml += `<url><loc>${base}/sponsor.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`;
     for (const page of ['api-relay', 'ai-api-relay', 'openai-relay', 'claude-relay', 'gemini-relay', 'cheap-api-relay', 'stable-api-relay', 'openai-api', 'claude-api', 'deepseek-api', 'free-api', 'pay-as-you-go-api']) {
@@ -24,6 +25,52 @@ export function applyPublicRoutes(app) {
     }
     xml += '</urlset>';
     return new Response(xml, { headers: { 'Content-Type': 'application/xml', 'Cache-Control': 'public, max-age=3600' } });
+  });
+
+  // ── Site profile：面向搜索与 AI 问答的机器可读站点摘要 ──
+  app.get('/site-profile', async (c) => {
+    const db = c.env.DB;
+    const [totalRow, categoryRows, statusRows, promoRow, updatedRow] = await Promise.all([
+      db.prepare('SELECT COUNT(*) AS total FROM providers WHERE online = 1').first(),
+      db.prepare('SELECT category, COUNT(*) AS count FROM providers WHERE online = 1 GROUP BY category ORDER BY count DESC').all(),
+      db.prepare('SELECT site_status, COUNT(*) AS count FROM providers WHERE online = 1 GROUP BY site_status ORDER BY count DESC').all(),
+      db.prepare("SELECT COUNT(*) AS count FROM providers WHERE online = 1 AND promotion IS NOT NULL AND promotion != '{}' AND promotion LIKE '%\"enabled\":true%'").first(),
+      db.prepare("SELECT MAX(updated_at) AS updated_at FROM providers WHERE online = 1").first()
+    ]);
+    const base = 'https://dhapi.pages.dev';
+    return c.json({
+      name: '中转导航',
+      url: base + '/',
+      language: 'zh-CN',
+      positioning: '中文 AI API 聚合中转站导航与对比站，主要收录聚合中转服务，官方直连作为参考分类保留。',
+      audience: ['个人开发者', '产品团队', '需要比较多模型 API 服务的用户', '希望提交或认领资料的服务商'],
+      provider_count: totalRow?.total || 0,
+      category_counts: (categoryRows.results || []).map(r => ({ category: r.category || '未分类', count: r.count || 0 })),
+      site_status_counts: (statusRows.results || []).map(r => ({ status: r.site_status || 'unknown', count: r.count || 0 })),
+      promotion_enabled_count: promoRow?.count || 0,
+      updated_at: updatedRow?.updated_at || '',
+      definitions: {
+        aggregator: '聚合中转指非官方直连、支持多模型聚合或统一接入的 API 服务商。',
+        official_direct: '官方直连指模型官方提供的 API 官网入口，在本站作为参考分类保留。'
+      },
+      selection_criteria: ['支持模型', '计费方式', '网站状态', '商家优惠活动', '用户评价', '热度', '信息完整度'],
+      primary_pages: [
+        { name: '首页', url: base + '/' },
+        { name: 'AI API 聚合中转站专题', url: base + '/api-relay' },
+        { name: 'AI API 聚合平台专题', url: base + '/ai-api-relay' },
+        { name: 'OpenAI 中转专题', url: base + '/openai-relay' },
+        { name: 'Claude 中转专题', url: base + '/claude-relay' },
+        { name: 'Gemini 中转专题', url: base + '/gemini-relay' },
+        { name: '低成本中转专题', url: base + '/cheap-api-relay' },
+        { name: '稳定中转专题', url: base + '/stable-api-relay' },
+        { name: 'AI 问答摘要', url: base + '/answers.html' },
+        { name: '提交商家', url: base + '/submit.html' },
+        { name: '推广合作', url: base + '/sponsor.html' }
+      ],
+      llms_txt: base + '/llms.txt',
+      sitemap: base + '/sitemap.xml',
+      note: '数据仅供参考，请以商家官网最新说明为准。'
+    }, 200, { 'Cache-Control': 'public, max-age=1800' });
   });
 
   // ── Public Routes ──

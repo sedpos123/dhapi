@@ -16,11 +16,15 @@
 <link rel="canonical" href="https://dhapi.pages.dev/" />
 <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
 <link rel="alternate" type="text/plain" href="/llms.txt" title="中转导航站点说明" />
+<link rel="alternate" type="application/json" href="/api/site-profile" title="中转导航机器可读摘要" />
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"中转导航","description":"AI API 聚合中转站导航与对比站","url":"https://dhapi.pages.dev/","inLanguage":"zh-CN","potentialAction":{"@type":"SearchAction","target":"https://dhapi.pages.dev/?q={search_term_string}","query-input":"required name=search_term_string"}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"如何选择 AI API 聚合中转站？","acceptedAnswer":{"@type":"Answer","text":"先按需要的模型、计费方式和服务类型筛选，再比较网站状态、信息完整度与用户评价；正式接入前请以服务商官网的最新说明为准。"}},{"@type":"Question","name":"可以免费提交聚合中转站信息吗？","acceptedAnswer":{"@type":"Answer","text":"可以。提交基础信息后会进入审核，审核通过后可展示在首页搜索、分类筛选和服务商详情页。"}},{"@type":"Question","name":"网站状态代表什么？","acceptedAnswer":{"@type":"Answer","text":"网站状态来自定期访问检查，用于辅助判断官网是否可访问，不代表服务质量或接口可用性。"}}]}
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"中转导航是什么？","acceptedAnswer":{"@type":"Answer","text":"中转导航是中文 AI API 聚合中转站导航与对比站，主要收录聚合中转服务，官方直连作为参考分类保留。"}},{"@type":"Question","name":"中转导航目前收录多少服务商？","acceptedAnswer":{"@type":"Answer","text":"当前前台收录 500 个服务商，其中聚合中转 492 个，官方直连 8 个。"}},{"@type":"Question","name":"如何选择 AI API 聚合中转站？","acceptedAnswer":{"@type":"Answer","text":"先按需要的模型、计费方式和服务类型筛选，再比较网站状态、优惠活动、信息完整度与用户评价；正式接入前请以服务商官网的最新说明为准。"}},{"@type":"Question","name":"可以免费提交聚合中转站信息吗？","acceptedAnswer":{"@type":"Answer","text":"可以。提交基础信息后会进入审核，审核通过后可展示在首页搜索、分类筛选和服务商详情页。"}},{"@type":"Question","name":"网站状态代表什么？","acceptedAnswer":{"@type":"Answer","text":"网站状态来自定期访问检查，用于辅助判断官网是否可访问，不代表服务质量或接口可用性。"}}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"CollectionPage","name":"AI API 聚合中转站导航与对比","url":"https://dhapi.pages.dev/","inLanguage":"zh-CN","description":"中转导航当前前台收录 500 个 AI API 服务商，其中聚合中转 492 个，支持按模型、计费方式、网站状态、优惠活动、评分和热度筛选。","about":["AI API 聚合中转站","OpenAI 中转","Claude 中转","Gemini 中转","DeepSeek API","多模型 API 服务商"],"isPartOf":{"@type":"WebSite","name":"中转导航","url":"https://dhapi.pages.dev/"}}
 </script>
 <style>
 :root {
@@ -423,6 +427,7 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   <div class="nav-links">
     <a href="index.html">首页</a>
     <a href="#selection-guide">选型</a>
+    <a href="answers.html">问答摘要</a>
     <a href="submit.html">提交商家</a>
     <a href="merchant.html">商家入口</a>
     <a href="sponsor.html">推广合作</a>
@@ -533,7 +538,7 @@ a:focus-visible, button:focus-visible, input:focus-visible {
       <ul>
         <li>官网链接可访问，并每天自动检查网站状态。</li>
         <li>信息包含模型覆盖、计费方式、简介和目标用户。</li>
-        <li>支持用户评价、收藏和热度排行，方便持续更新。</li>
+        <li>支持优惠活动、用户评价、收藏和热度排行，方便持续更新。</li>
       </ul>
     </article>
   </div>
@@ -552,7 +557,7 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   <div class="faq-list">
     <article class="faq-item">
       <h3>如何选择服务商？</h3>
-      <p>先按模型、计费方式和服务类型筛选，再结合网站状态、信息完整度与用户评价横向比较。</p>
+      <p>先按模型、计费方式和服务类型筛选，再结合网站状态、优惠活动、信息完整度与用户评价横向比较。</p>
     </article>
     <article class="faq-item">
       <h3>可以免费提交吗？</h3>
@@ -562,10 +567,18 @@ a:focus-visible, button:focus-visible, input:focus-visible {
       <h3>网站状态代表什么？</h3>
       <p>它来自定期访问检查，可辅助判断官网是否可访问；不代表服务质量或接口可用性。</p>
     </article>
+    <article class="faq-item">
+      <h3>目前收录多少家？</h3>
+      <p>当前前台收录 500 个服务商，其中聚合中转 492 个，官方直连 8 个。</p>
+    </article>
+    <article class="faq-item">
+      <h3>哪里看站点摘要？</h3>
+      <p>可以查看 <a href="answers.html">AI 问答摘要</a>、<a href="/llms.txt">llms.txt</a> 或 <a href="/api/site-profile">机器可读摘要</a>。</p>
+    </article>
   </div>
 </section>
 <footer class="site-footer">
-  <p>数据仅供参考，请以商家官网为准。如有新商家、信息更新或纠错，<a href="submit.html">提交反馈</a>。</p>
+  <p>数据仅供参考，请以商家官网为准。如有新商家、信息更新或纠错，<a href="submit.html">提交反馈</a>。站点摘要见 <a href="answers.html">AI 问答摘要</a>。</p>
 </footer>
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal" id="modalContent"></div>

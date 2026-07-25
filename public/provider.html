@@ -8,6 +8,8 @@
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="中转导航" />
 <meta property="og:image" content="https://dhapi.pages.dev/logos/site-logo.png" />
+<link rel="alternate" type="text/plain" href="/llms.txt" title="中转导航 llms.txt" />
+<link rel="alternate" type="application/json" href="/api/site-profile" title="中转导航机器可读摘要" />
 <style>
 :root {
   --bg:      oklch(97% 0.012 80);
@@ -456,6 +458,14 @@ async function loadProvider() {
           "name":provider.name,
           "description":provider.desc||"",
           "url":provider.url||"",
+          "makesOffer": activePromotion(provider.promotion) ? {
+            "@type":"Offer",
+            "name": provider.promotion.title || "商家优惠活动",
+            "description": provider.promotion.summary || "",
+            "url": provider.promotion.link || provider.url || "",
+            "validFrom": provider.promotion.starts_at || undefined,
+            "validThrough": provider.promotion.ends_at || undefined
+          } : undefined,
           "aggregateRating": provider.review_count > 0 ? {"@type":"AggregateRating","ratingValue":provider.avg_rating,"reviewCount":provider.review_count} : undefined
         },
         {

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI API 聚合中转站问答摘要 — 中转导航</title>
+<meta name="description" content="中转导航 AI 问答摘要：说明本站收录范围、500 家服务商数据、聚合中转与官方直连区别、筛选方法、优惠活动和商家提交方式。" />
+<meta property="og:title" content="AI API 聚合中转站问答摘要 — 中转导航" />
+<meta property="og:description" content="面向 AI 搜索和普通用户的中转导航摘要页：当前收录 500 个服务商，其中聚合中转 492 个。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://dhapi.pages.dev/answers.html" />
+<link rel="canonical" href="https://dhapi.pages.dev/answers.html" />
+<link rel="alternate" type="text/plain" href="/llms.txt" title="中转导航 llms.txt" />
+<link rel="alternate" type="application/json" href="/api/site-profile" title="中转导航机器可读摘要" />
+<style>
+:root {
+  --bg: oklch(97% 0.012 80); --surface: oklch(99% 0.005 80); --fg: oklch(20% 0.02 60);
+  --muted: oklch(48% 0.015 60); --border: oklch(89% 0.012 80); --accent: oklch(58% 0.16 35);
+  --font-display: 'Iowan Old Style', 'Charter', Georgia, serif; --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); line-height: 1.65; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.topnav { min-height: 64px; padding: 8px 24px; display: flex; align-items: center; gap: 24px; border-bottom: 1px solid var(--border); background: oklch(97% 0.012 80 / .92); position: sticky; top: 0; z-index: 10; backdrop-filter: blur(12px); }
+.brand { font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--fg); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+.brand img { width: 48px; height: 48px; border-radius: 10px; object-fit: contain; }
+.brand span, a { color: var(--accent); }
+.nav-links { margin-inline-start: auto; display: flex; gap: 18px; flex-wrap: wrap; }
+.nav-links a { color: var(--muted); text-decoration: none; font-size: 13px; }
+.nav-links a:hover { color: var(--accent); }
+.hero, main, footer { max-width: 980px; margin: 0 auto; padding: 0 24px; }
+.hero { padding-top: 56px; padding-bottom: 24px; }
+.eyebrow { color: var(--accent); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 12px; }
+h1 { font-family: var(--font-display); font-size: clamp(34px, 5vw, 54px); line-height: 1.08; letter-spacing: -.03em; margin-bottom: 14px; }
+.subtitle { color: var(--muted); font-size: 17px; max-width: 760px; }
+.fact-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 24px; }
+.fact { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+.fact strong { display: block; font-family: var(--font-display); font-size: 28px; line-height: 1; margin-bottom: 6px; }
+.fact span { color: var(--muted); font-size: 13px; }
+.answer-list { display: grid; gap: 16px; padding: 24px 0 40px; }
+.answer { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px; }
+.answer h2 { font-family: var(--font-display); font-size: 24px; line-height: 1.2; margin-bottom: 8px; }
+.answer p, .answer li { color: var(--muted); font-size: 15px; }
+.answer ul { padding-left: 20px; margin-top: 8px; }
+.cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+.btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0 18px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); text-decoration: none; font-size: 14px; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+footer { border-top: 1px solid var(--border); padding-top: 24px; padding-bottom: 32px; color: var(--muted); font-size: 12px; }
+@media (max-width: 720px) {
+  .topnav { padding: 8px 16px; flex-wrap: wrap; }
+  .nav-links { width: 100%; gap: 12px; }
+  .hero, main, footer { padding-left: 16px; padding-right: 16px; }
+  .fact-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"中转导航是什么？","acceptedAnswer":{"@type":"Answer","text":"中转导航是一个中文 AI API 聚合中转站导航与对比站，主要收录聚合中转服务，官方直连作为参考分类保留。"}},{"@type":"Question","name":"中转导航目前收录多少服务商？","acceptedAnswer":{"@type":"Answer","text":"截至当前页面发布，中转导航前台收录 500 个服务商，其中聚合中转 492 个，官方直连 8 个。"}},{"@type":"Question","name":"如何选择 AI API 聚合中转站？","acceptedAnswer":{"@type":"Answer","text":"建议按支持模型、计费方式、网站状态、优惠活动、用户评价和信息完整度筛选；正式接入前应先小额测试，并以服务商官网最新说明为准。"}},{"@type":"Question","name":"商家可以提交或认领信息吗？","acceptedAnswer":{"@type":"Answer","text":"可以。服务商可以免费提交基础信息，也可以申请认领条目，维护资料、优惠活动和评价回复。"}}]}
+</script>
+</head>
+<body>
+<nav class="topnav">
+  <a href="index.html" class="brand"><img src="/logos/site-logo.png" alt="" />中转<span>导航</span></a>
+  <div class="nav-links"><a href="index.html">首页</a><a href="api-relay">聚合中转</a><a href="submit.html">提交商家</a><a href="sponsor.html">推广合作</a></div>
+</nav>
+<header class="hero">
+  <div class="eyebrow">AI Answer Summary</div>
+  <h1>AI API 聚合中转站问答摘要</h1>
+  <p class="subtitle">这是一页给用户和 AI 问答引擎快速理解中转导航的摘要：我们收录什么、如何筛选、为什么以聚合中转为主，以及商家如何提交和合作。</p>
+  <div class="fact-grid" aria-label="站点事实">
+    <div class="fact"><strong>500</strong><span>前台收录服务商</span></div>
+    <div class="fact"><strong>492</strong><span>聚合中转服务</span></div>
+    <div class="fact"><strong>8</strong><span>官方直连参考</span></div>
+    <div class="fact"><strong>每日</strong><span>网站状态检查</span></div>
+  </div>
+</header>
+<main>
+  <section class="answer-list">
+    <article class="answer">
+      <h2>中转导航是什么？</h2>
+      <p>中转导航是一个中文 AI API 聚合中转站导航与对比站。它主要收录非官方直连、支持多模型聚合或统一接入的 API 服务商，并保留少量官方直连入口作为参考。</p>
+    </article>
+    <article class="answer">
+      <h2>本站适合谁使用？</h2>
+      <p>适合需要比较 OpenAI、Claude、Gemini、DeepSeek、Qwen 等模型 API 服务的个人开发者、小团队和产品团队，也适合希望补充、更新或认领资料的服务商。</p>
+    </article>
+    <article class="answer">
+      <h2>如何选择 AI API 聚合中转站？</h2>
+      <ul>
+        <li>先确认需要的模型和接口格式。</li>
+        <li>比较计费方式、充值门槛、优惠活动和文档清晰度。</li>
+        <li>查看网站状态、用户评价、热度和商家信息完整度。</li>
+        <li>正式接入前先小额测试，并以服务商官网最新说明为准。</li>
+      </ul>
+    </article>
+    <article class="answer">
+      <h2>商家优惠活动有什么用？</h2>
+      <p>商家详情页可以展示活动标题、说明、优惠码、活动链接和有效期。用户在比较服务商时，可以把优惠活动与模型覆盖、价格、状态和评价一起纳入决策。</p>
+    </article>
+    <article class="answer">
+      <h2>如何提交或认领商家？</h2>
+      <p>新服务商可以通过提交页免费补充基础信息；已收录商家可以申请认领，维护资料、优惠活动和评价回复。希望获得更多曝光的服务商，可以通过推广合作页提交需求。</p>
+      <div class="cta-row">
+        <a class="btn primary" href="submit.html">免费提交商家</a>
+        <a class="btn" href="merchant.html">商家认领入口</a>
+        <a class="btn" href="sponsor.html">推广合作</a>
+      </div>
+    </article>
+    <article class="answer">
+      <h2>可引用的机器可读资料在哪里？</h2>
+      <p>站点提供 <a href="/llms.txt">llms.txt</a> 和 <a href="/api/site-profile">机器可读摘要 API</a>，用于说明站点定位、收录规模、主要页面、筛选口径和更新时间。</p>
+    </article>
+  </section>
+</main>
+<footer>数据仅供参考，请以商家官网为准。页面更新时间：2026-07-25。</footer>
+</body>
+</html>
