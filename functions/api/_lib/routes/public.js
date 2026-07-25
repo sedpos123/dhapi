@@ -16,7 +16,7 @@ export function applyPublicRoutes(app) {
     xml += `<url><loc>${base}/answers.html</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>`;
     xml += `<url><loc>${base}/submit.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>`;
     xml += `<url><loc>${base}/sponsor.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`;
-    for (const page of ['api-relay', 'ai-api-relay', 'openai-relay', 'claude-relay', 'gemini-relay', 'cheap-api-relay', 'stable-api-relay', 'openai-api', 'claude-api', 'deepseek-api', 'free-api', 'pay-as-you-go-api']) {
+    for (const page of ['guides.html', 'how-to-choose-api-relay.html', 'api-relay-vs-official-api.html', 'api-relay-merchant-growth.html', 'api-relay', 'ai-api-relay', 'openai-relay', 'claude-relay', 'gemini-relay', 'cheap-api-relay', 'stable-api-relay', 'openai-api', 'claude-api', 'deepseek-api', 'free-api', 'pay-as-you-go-api']) {
       xml += `<url><loc>${base}/${page}</loc><changefreq>weekly</changefreq><priority>0.85</priority></url>`;
     }
     for (const p of results) {
@@ -64,6 +64,10 @@ export function applyPublicRoutes(app) {
         { name: '低成本中转专题', url: base + '/cheap-api-relay' },
         { name: '稳定中转专题', url: base + '/stable-api-relay' },
         { name: 'AI 问答摘要', url: base + '/answers.html' },
+        { name: '指南中心', url: base + '/guides.html' },
+        { name: 'AI API 聚合中转站选型指南', url: base + '/how-to-choose-api-relay.html' },
+        { name: '聚合中转与官方直连对比', url: base + '/api-relay-vs-official-api.html' },
+        { name: 'AI API 商家增长指南', url: base + '/api-relay-merchant-growth.html' },
         { name: '提交商家', url: base + '/submit.html' },
         { name: '推广合作', url: base + '/sponsor.html' }
       ],

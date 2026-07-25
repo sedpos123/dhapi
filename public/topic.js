@@ -82,6 +82,8 @@ function renderRelatedTopics() {
     ['deepseek-api', 'DeepSeek API 服务商'],
     ['free-api', '免费额度 API 服务商'],
     ['pay-as-you-go-api', '按量计费 API 服务商'],
+    ['guides.html', '选型指南中心'],
+    ['how-to-choose-api-relay.html', '怎么选中转站'],
     ['answers.html', 'AI 问答摘要']
   ].filter(([href]) => href !== current);
   document.getElementById('relatedTopics').innerHTML = topics.map(([href, label]) => `<a href="${href}">${label}</a>`).join('');
