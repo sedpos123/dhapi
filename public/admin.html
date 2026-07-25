@@ -773,6 +773,7 @@ function showProviderModal(p) {
   document.getElementById('providerModalTitle').textContent = isNew ? '添加商家' : '编辑商家';
   const selBrands = isNew ? [] : (p.brands || []);
   const selFeatures = isNew ? [] : (p.features || []);
+  const promo = (!isNew && p.promotion) ? p.promotion : {};
   const logoPreviewSrc = _editingLogoUrl ? `/api/logo/${p.id}` : '';
 
   document.getElementById('providerModalBody').innerHTML = `
@@ -823,6 +824,20 @@ function showProviderModal(p) {
       </select></div>
     </div>
     <div class="field"><label><input type="checkbox" id="pFreeQuota" ${!isNew && p.free_quota ? 'checked' : ''} style="margin-right:6px;accent-color:var(--accent);" />提供免费额度/试用额度</label></div>
+    <div class="field" style="border:1px dashed var(--border);border-radius:10px;padding:12px;background:var(--bg);">
+      <label><input type="checkbox" id="pPromoEnabled" ${promo.enabled ? 'checked' : ''} style="margin-right:6px;accent-color:var(--accent);" />展示商家优惠活动</label>
+      <div class="field-inline" style="margin-top:10px;">
+        <div class="field"><label>活动标签</label><input type="text" id="pPromoBadge" value="${esc(promo.badge || '优惠活动')}" placeholder="如 限时优惠" /></div>
+        <div class="field"><label>优惠码</label><input type="text" id="pPromoCode" value="${esc(promo.code || '')}" placeholder="如 DHAPI20" /></div>
+      </div>
+      <div class="field"><label>活动标题</label><input type="text" id="pPromoTitle" value="${esc(promo.title || '')}" placeholder="如 新用户充值加赠 20%" /></div>
+      <div class="field"><label>活动说明</label><textarea id="pPromoSummary" rows="2" placeholder="一句话说明优惠利益点、适用范围或注意事项">${esc(promo.summary || '')}</textarea></div>
+      <div class="field"><label>活动链接 <span style="font-weight:400;color:var(--muted);font-size:11px;">留空则使用官网链接</span></label><input type="url" id="pPromoLink" value="${esc(promo.link || '')}" placeholder="https://example.com/promo" /></div>
+      <div class="field-inline">
+        <div class="field"><label>开始日期</label><input type="date" id="pPromoStartsAt" value="${esc(promo.starts_at || '')}" /></div>
+        <div class="field"><label>结束日期</label><input type="date" id="pPromoEndsAt" value="${esc(promo.ends_at || '')}" /></div>
+      </div>
+    </div>
     ${!isNew ? `<div class="field-inline"><div class="field"><label>访问次数</label><input type="text" value="${p.click_count || 0}" disabled style="color:var(--muted);background:var(--border);" /></div><div class="field"><label>收藏数</label><input type="text" value="${p.favorite_count || 0}" disabled style="color:var(--muted);background:var(--border);" /></div></div>` : ''}
     <div class="field"><label>定价套餐 <span style="font-weight:400;color:var(--muted);font-size:11px;">按模型族/分组设置倍率与分层价（PriceAI 风格）</span></label>
       <div id="pPricingPlans"></div>
@@ -963,6 +978,21 @@ function removePricingPlan(i) {
   renderPricingPlans();
 }
 
+function collectPromotion(prefix = 'pPromo') {
+  const enabledEl = document.getElementById(prefix + 'Enabled');
+  if (!enabledEl) return {};
+  return {
+    enabled: enabledEl.checked,
+    badge: (document.getElementById(prefix + 'Badge') || {}).value ? document.getElementById(prefix + 'Badge').value.trim() : '',
+    title: (document.getElementById(prefix + 'Title') || {}).value ? document.getElementById(prefix + 'Title').value.trim() : '',
+    summary: (document.getElementById(prefix + 'Summary') || {}).value ? document.getElementById(prefix + 'Summary').value.trim() : '',
+    code: (document.getElementById(prefix + 'Code') || {}).value ? document.getElementById(prefix + 'Code').value.trim() : '',
+    link: (document.getElementById(prefix + 'Link') || {}).value ? document.getElementById(prefix + 'Link').value.trim() : '',
+    starts_at: (document.getElementById(prefix + 'StartsAt') || {}).value || '',
+    ends_at: (document.getElementById(prefix + 'EndsAt') || {}).value || ''
+  };
+}
+
 /* ========== MONITORING ========== */
 async function loadProviderMonitoring(pid) {
   const el = document.getElementById('pMonitoringList');
@@ -1071,7 +1101,8 @@ document.getElementById('btnSaveProvider').addEventListener('click', async () =>
     supported_models: selectedBrands,
     target_audience: document.getElementById('pTargetAudience').value,
     free_quota: document.getElementById('pFreeQuota').checked ? 1 : 0,
-    pricing_plans: collectPricingPlans()
+    pricing_plans: collectPricingPlans(),
+    promotion: collectPromotion()
   };
 
   try {

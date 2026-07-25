@@ -80,14 +80,14 @@ export function applyMerchantRoutes(app) {
     const value = cleanProviderInput(await c.req.json());
     const error = providerInputError(value);
     if (error) return c.json({ error }, 400);
-    const { name, desc, url, category, color, logo_url, input_price, output_price, billing_type, target_audience, free_quota, founded_at, brands, features, supported_models } = value;
+    const { name, desc, url, category, color, logo_url, input_price, output_price, billing_type, target_audience, free_quota, founded_at, brands, features, supported_models, promotion } = value;
     const modelsArr = Array.isArray(supported_models) ? supported_models : (Array.isArray(brands) ? brands : []);
     const bucket = c.env.LOGOS;
     if (bucket && logo_url) {
       const old = await db.prepare('SELECT logo_url FROM providers WHERE id = ?').bind(merchant.provider_id).first();
       if (old && old.logo_url && old.logo_url !== logo_url) { await bucket.delete(old.logo_url).catch(() => {}); }
     }
-    await db.prepare(`UPDATE providers SET name=?, desc=?, url=?, category=?, color=?, logo_url=?, input_price=?, output_price=?, billing_type=?, target_audience=?, free_quota=?, founded_at=?, brands=?, features=?, supported_models=?, updated_at=datetime('now','localtime') WHERE id=?`).bind(name, desc, url || '#', category, color || '#888', logo_url || '', input_price || '', output_price || '', billing_type || '', target_audience || '', free_quota ? 1 : 0, founded_at || '', JSON.stringify(Array.isArray(brands) ? brands : []), JSON.stringify(Array.isArray(features) ? features : []), JSON.stringify(modelsArr), merchant.provider_id).run();
+    await db.prepare(`UPDATE providers SET name=?, desc=?, url=?, category=?, color=?, logo_url=?, input_price=?, output_price=?, billing_type=?, target_audience=?, free_quota=?, founded_at=?, brands=?, features=?, supported_models=?, promotion=?, updated_at=datetime('now','localtime') WHERE id=?`).bind(name, desc, url || '#', category, color || '#888', logo_url || '', input_price || '', output_price || '', billing_type || '', target_audience || '', free_quota ? 1 : 0, founded_at || '', JSON.stringify(Array.isArray(brands) ? brands : []), JSON.stringify(Array.isArray(features) ? features : []), JSON.stringify(modelsArr), JSON.stringify(promotion || {}), merchant.provider_id).run();
     return c.json({ success: true });
   });
 

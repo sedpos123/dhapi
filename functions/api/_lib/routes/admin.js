@@ -47,10 +47,10 @@ export function applyAdminRoutes(app) {
     const value = cleanProviderInput(await c.req.json());
     const error = providerInputError(value);
     if (error) return c.json({ error }, 400);
-    const { name, color, category, desc, brands, features, status, founded_at, url, online, input_price, output_price, sort_order, logo_url, billing_type, supported_models, target_audience, free_quota, pricing_plans } = value;
+    const { name, color, category, desc, brands, features, status, founded_at, url, online, input_price, output_price, sort_order, logo_url, billing_type, supported_models, target_audience, free_quota, pricing_plans, promotion } = value;
     const id = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9一-鿿-]/g, '') + '-' + Date.now().toString(36);
     const modelsArr = Array.isArray(supported_models) ? supported_models : brands;
-    await db.prepare(`INSERT INTO providers (id, name, color, logo_url, category, desc, brands, features, status, founded_at, url, online, input_price, output_price, sort_order, billing_type, supported_models, target_audience, free_quota, pricing_plans) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(id, name, color || '#888', logo_url || '', category, desc, JSON.stringify(brands), JSON.stringify(features || []), status || 'ok', founded_at || '', url || '#', online !== false ? 1 : 0, input_price || '', output_price || '', sort_order || 0, billing_type || '', JSON.stringify(modelsArr), target_audience || '', free_quota ? 1 : 0, JSON.stringify(pricing_plans || [])).run();
+    await db.prepare(`INSERT INTO providers (id, name, color, logo_url, category, desc, brands, features, status, founded_at, url, online, input_price, output_price, sort_order, billing_type, supported_models, target_audience, free_quota, pricing_plans, promotion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(id, name, color || '#888', logo_url || '', category, desc, JSON.stringify(brands), JSON.stringify(features || []), status || 'ok', founded_at || '', url || '#', online !== false ? 1 : 0, input_price || '', output_price || '', sort_order || 0, billing_type || '', JSON.stringify(modelsArr), target_audience || '', free_quota ? 1 : 0, JSON.stringify(pricing_plans || []), JSON.stringify(promotion || {})).run();
     return c.json({ success: true, id });
   });
 
@@ -59,14 +59,14 @@ export function applyAdminRoutes(app) {
     const value = cleanProviderInput(await c.req.json());
     const error = providerInputError(value);
     if (error) return c.json({ error }, 400);
-    const { name, color, category, desc, brands, features, status, founded_at, url, online, input_price, output_price, sort_order, logo_url, billing_type, supported_models, target_audience, free_quota, pricing_plans } = value;
+    const { name, color, category, desc, brands, features, status, founded_at, url, online, input_price, output_price, sort_order, logo_url, billing_type, supported_models, target_audience, free_quota, pricing_plans, promotion } = value;
     const bucket = c.env.LOGOS;
     if (bucket && logo_url) {
       const old = await db.prepare('SELECT logo_url FROM providers WHERE id = ?').bind(c.req.param('id')).first();
       if (old && old.logo_url && old.logo_url !== logo_url) { await bucket.delete(old.logo_url).catch(() => {}); }
     }
     const modelsArr = Array.isArray(supported_models) ? supported_models : brands;
-    await db.prepare(`UPDATE providers SET name=?, color=?, logo_url=?, category=?, desc=?, brands=?, features=?, status=?, founded_at=?, url=?, online=?, input_price=?, output_price=?, sort_order=?, billing_type=?, supported_models=?, target_audience=?, free_quota=?, pricing_plans=?, updated_at=datetime('now','localtime') WHERE id=?`).bind(name, color, logo_url || '', category, desc, JSON.stringify(brands), JSON.stringify(features || []), status, founded_at || '', url, online ? 1 : 0, input_price || '', output_price || '', sort_order || 0, billing_type || '', JSON.stringify(modelsArr), target_audience || '', free_quota ? 1 : 0, JSON.stringify(pricing_plans || []), c.req.param('id')).run();
+    await db.prepare(`UPDATE providers SET name=?, color=?, logo_url=?, category=?, desc=?, brands=?, features=?, status=?, founded_at=?, url=?, online=?, input_price=?, output_price=?, sort_order=?, billing_type=?, supported_models=?, target_audience=?, free_quota=?, pricing_plans=?, promotion=?, updated_at=datetime('now','localtime') WHERE id=?`).bind(name, color, logo_url || '', category, desc, JSON.stringify(brands), JSON.stringify(features || []), status, founded_at || '', url, online ? 1 : 0, input_price || '', output_price || '', sort_order || 0, billing_type || '', JSON.stringify(modelsArr), target_audience || '', free_quota ? 1 : 0, JSON.stringify(pricing_plans || []), JSON.stringify(promotion || {}), c.req.param('id')).run();
     return c.json({ success: true });
   });
 
@@ -256,8 +256,8 @@ export function applyAdminRoutes(app) {
     }
     // 插入按父先子后，避免外键引用落空
     if (providers) { for (const p of providers) {
-      await db.prepare(`INSERT OR REPLACE INTO providers (id, name, color, logo_url, category, desc, brands, features, status, founded_at, url, online, input_price, output_price, sort_order, click_count, favorite_count, billing_type, supported_models, target_audience, free_quota, avg_rating, review_count, pricing_plans, site_status, site_checked_at, site_status_code, site_latency_ms, site_error, site_error_days, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        p.id, p.name, p.color, p.logo_url || '', p.category, p.desc, p.brands, p.features, p.status, p.founded_at || '', p.url, p.online, p.input_price || '', p.output_price || '', p.sort_order || 0, p.click_count || 0, p.favorite_count || 0, p.billing_type || '', p.supported_models || '[]', p.target_audience || '', p.free_quota || 0, p.avg_rating || 0, p.review_count || 0, p.pricing_plans || '[]', p.site_status || 'unknown', p.site_checked_at || '', p.site_status_code || 0, p.site_latency_ms || 0, p.site_error || '', p.site_error_days || 0, p.created_at || '', p.updated_at || ''
+      await db.prepare(`INSERT OR REPLACE INTO providers (id, name, color, logo_url, category, desc, brands, features, status, founded_at, url, online, input_price, output_price, sort_order, click_count, favorite_count, billing_type, supported_models, target_audience, free_quota, avg_rating, review_count, pricing_plans, promotion, site_status, site_checked_at, site_status_code, site_latency_ms, site_error, site_error_days, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        p.id, p.name, p.color, p.logo_url || '', p.category, p.desc, p.brands, p.features, p.status, p.founded_at || '', p.url, p.online, p.input_price || '', p.output_price || '', p.sort_order || 0, p.click_count || 0, p.favorite_count || 0, p.billing_type || '', p.supported_models || '[]', p.target_audience || '', p.free_quota || 0, p.avg_rating || 0, p.review_count || 0, p.pricing_plans || '[]', p.promotion || '{}', p.site_status || 'unknown', p.site_checked_at || '', p.site_status_code || 0, p.site_latency_ms || 0, p.site_error || '', p.site_error_days || 0, p.created_at || '', p.updated_at || ''
       ).run();
     } }
     if (brands) { for (const b of brands) { await db.prepare('INSERT OR REPLACE INTO brands (id, name) VALUES (?, ?)').bind(b.id, b.name).run(); } }

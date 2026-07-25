@@ -10,6 +10,7 @@ export function parseProvider(row) {
     features: JSON.parse(row.features || '[]'),
     supported_models: JSON.parse(row.supported_models || '[]'),
     pricing_plans: JSON.parse(row.pricing_plans || '[]'),
+    promotion: JSON.parse(row.promotion || '{}'),
     online: !!row.online,
     click_count: row.click_count || 0,
     favorite_count: row.favorite_count || 0,
@@ -66,6 +67,35 @@ export function cleanPricingPlans(value, maxItems = 30) {
   }).filter(p => p && (p.family || p.group_name || p.input_price || p.fixed_price));
 }
 
+export function cleanPromotion(value) {
+  if (!value || typeof value !== 'object') return {};
+  const title = cleanText(value.title, 80);
+  const summary = cleanText(value.summary, 240);
+  const code = cleanText(value.code, 40);
+  const link = cleanText(value.link, 2048);
+  const startsAt = cleanText(value.starts_at, 10);
+  const endsAt = cleanText(value.ends_at, 10);
+  const badge = cleanText(value.badge, 24);
+  const enabled = !!value.enabled && !!(title || summary || code);
+  const safeLink = link && isHttpUrl(link) ? link : '';
+  const safeStartsAt = startsAt && /^\d{4}-\d{2}-\d{2}$/.test(startsAt) ? startsAt : '';
+  const safeEndsAt = endsAt && /^\d{4}-\d{2}-\d{2}$/.test(endsAt) ? endsAt : '';
+  return {
+    enabled,
+    title,
+    summary,
+    code,
+    link: safeLink,
+    starts_at: safeStartsAt,
+    ends_at: safeEndsAt,
+    badge: badge || '优惠活动'
+  };
+}
+
+export function hasActivePromotion(promotion) {
+  return !!(promotion && promotion.enabled && (promotion.title || promotion.summary || promotion.code));
+}
+
 export function isHttpUrl(value) {
   try {
     const url = new URL(value);
@@ -95,7 +125,8 @@ export function cleanProviderInput(body) {
     logo_url: cleanText(body.logo_url, 512), billing_type: cleanText(body.billing_type, 40),
     supported_models: supportedModels.length ? supportedModels : brands,
     target_audience: cleanText(body.target_audience, 80), free_quota: !!body.free_quota,
-    pricing_plans: cleanPricingPlans(body.pricing_plans)
+    pricing_plans: cleanPricingPlans(body.pricing_plans),
+    promotion: cleanPromotion(body.promotion)
   };
 }
 

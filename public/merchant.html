@@ -326,6 +326,7 @@ async function loadProviderForEdit() {
     allBrands = (bRes.brands || []).map(b => b.name);
     allCategories = (cRes.categories || []).map(c => c.name);
     allCategoryObjs = cRes.categories || [];
+    const promo = p.promotion || {};
     const billingOptions = [['', '未设置'], ['pay_as_you_go', '按量计费'], ['subscription', '包月/包年'], ['free', '免费'], ['enterprise', '企业定制']];
     const audienceOptions = ['', '通用', '个人开发者', '企业', '学生'];
     document.getElementById('editFormContainer').innerHTML = `
@@ -357,6 +358,21 @@ async function loadProviderForEdit() {
           <div class="form-group"><label>目标用户</label><select id="editAudience">${audienceOptions.map(a => `<option value="${a}" ${a === p.target_audience ? 'selected' : ''}>${a || '未设置'}</option>`).join('')}</select></div>
         </div>
         <div class="form-group checkbox-group"><input type="checkbox" id="editFreeQuota" ${p.free_quota ? 'checked' : ''} /><label for="editFreeQuota">提供免费额度</label></div>
+      </div>
+      <div class="form-section">
+        <h3>优惠活动</h3>
+        <div class="form-group checkbox-group"><input type="checkbox" id="editPromoEnabled" ${promo.enabled ? 'checked' : ''} /><label for="editPromoEnabled">在详情页展示优惠活动</label></div>
+        <div class="form-row">
+          <div class="form-group"><label>活动标签</label><input id="editPromoBadge" value="${esc(promo.badge || '优惠活动')}" placeholder="如 限时优惠" /></div>
+          <div class="form-group"><label>优惠码</label><input id="editPromoCode" value="${esc(promo.code || '')}" placeholder="如 DHAPI20" /></div>
+        </div>
+        <div class="form-group"><label>活动标题</label><input id="editPromoTitle" value="${esc(promo.title || '')}" placeholder="如 新用户充值加赠 20%" /></div>
+        <div class="form-group"><label>活动说明</label><textarea id="editPromoSummary" placeholder="一句话说明优惠利益点、适用范围或注意事项">${esc(promo.summary || '')}</textarea></div>
+        <div class="form-group"><label>活动链接（留空则使用官网链接）</label><input id="editPromoLink" value="${esc(promo.link || '')}" placeholder="https://example.com/promo" /></div>
+        <div class="form-row">
+          <div class="form-group"><label>开始日期</label><input id="editPromoStartsAt" type="date" value="${esc(promo.starts_at || '')}" /></div>
+          <div class="form-group"><label>结束日期</label><input id="editPromoEndsAt" type="date" value="${esc(promo.ends_at || '')}" /></div>
+        </div>
       </div>
       <div class="form-section">
         <h3>核心特性</h3>
@@ -391,7 +407,8 @@ async function saveProvider() {
     free_quota: document.getElementById('editFreeQuota').checked,
     brands, features,
     supported_models: brands,
-    logo_url: ''
+    logo_url: '',
+    promotion: collectPromotion()
   };
   if (!body.name || !body.desc) { toast('请填写名称和简介', 'error'); return; }
   try {
@@ -400,6 +417,19 @@ async function saveProvider() {
     toast('保存成功', 'success');
     loadDashboard();
   } catch { toast('保存失败', 'error'); }
+}
+
+function collectPromotion() {
+  return {
+    enabled: document.getElementById('editPromoEnabled').checked,
+    badge: document.getElementById('editPromoBadge').value.trim(),
+    title: document.getElementById('editPromoTitle').value.trim(),
+    summary: document.getElementById('editPromoSummary').value.trim(),
+    code: document.getElementById('editPromoCode').value.trim(),
+    link: document.getElementById('editPromoLink').value.trim(),
+    starts_at: document.getElementById('editPromoStartsAt').value,
+    ends_at: document.getElementById('editPromoEndsAt').value
+  };
 }
 
 /* ========== REVIEWS ========== */

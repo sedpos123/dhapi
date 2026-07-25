@@ -166,6 +166,42 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .price-scroll .price-table { min-width: 680px; }
 .price-scroll .price-table th, .price-scroll .price-table td { white-space: nowrap; }
 
+/* Promotion */
+.promo-card {
+  position: relative; overflow: hidden;
+  background: linear-gradient(135deg, oklch(98% 0.035 70), oklch(96% 0.045 35));
+  border: 1px solid oklch(84% 0.08 55); border-radius: 14px;
+  padding: 18px; box-shadow: 0 14px 36px oklch(45% 0.08 55 / 0.08);
+}
+.promo-card::after {
+  content: ''; position: absolute; width: 160px; height: 160px; border-radius: 50%;
+  right: -56px; top: -76px; background: oklch(78% 0.13 55 / 0.18);
+}
+.promo-head { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.promo-badge {
+  display: inline-flex; align-items: center; min-height: 28px; padding: 0 10px; border-radius: 999px;
+  background: var(--accent); color: var(--surface); font-size: 12px; font-weight: 600;
+}
+.promo-title { font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+.promo-summary { position: relative; z-index: 1; color: var(--muted); font-size: 14px; line-height: 1.7; max-width: 680px; }
+.promo-actions { position: relative; z-index: 1; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
+.promo-code {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px;
+  border: 1px dashed var(--accent); border-radius: 8px; background: var(--surface);
+  font-family: var(--font-mono); font-size: 13px; color: var(--accent); font-weight: 700;
+}
+.promo-meta { position: relative; z-index: 1; margin-top: 10px; font-size: 12px; color: var(--muted); }
+.copy-btn {
+  min-height: 44px; padding: 0 14px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--surface); color: var(--fg); cursor: pointer; font: inherit; font-size: 13px; font-weight: 500;
+}
+.copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+@media (max-width: 520px) {
+  .promo-card { padding: 16px; }
+  .promo-title { font-size: 19px; }
+  .promo-actions .cta-btn, .promo-actions .copy-btn, .promo-code { width: 100%; }
+}
+
 /* Monitoring */
 .monitor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 14px; }
 .monitor-stat { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; }
@@ -286,6 +322,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
     <div class="section">
       <div class="section-title">关键数据</div>
       <div class="stats-grid" id="statsGrid"></div>
+    </div>
+    <div class="section" id="promotionSection" style="display:none;">
+      <div class="section-title">商家优惠活动</div>
+      <div id="promotionBody"></div>
     </div>
     <div class="section" id="pricingSection" style="display:none;">
       <div class="section-title">定价与倍率</div>
@@ -459,6 +499,7 @@ function renderProvider() {
   document.getElementById('infoGrid').innerHTML = `<div class="info-item"><span class="label">计费方式</span><span class="value">${billing}</span></div><div class="info-item"><span class="label">目标用户</span><span class="value">${esc(p.target_audience) || '通用'}</span></div><div class="info-item"><span class="label">输入价格</span><span class="value">${esc(p.input_price) || '—'}/M tokens</span></div><div class="info-item"><span class="label">输出价格</span><span class="value">${esc(p.output_price) || '—'}/M tokens</span></div>${p.free_quota ? '<div class="info-item"><span class="label">免费额度</span><span class="value" style="color:var(--success)">有</span></div>' : ''}`;
   renderSiteStatus();
   document.getElementById('modelTags').innerHTML = models.map(m => `<span class="tag">${esc(m)}</span>`).join('');
+  renderPromotion(p.promotion, hasUrl ? ctaHref : '');
   if (p.features && p.features.length) {
     document.getElementById('featureSection').style.display = 'block';
     document.getElementById('featureList').innerHTML = p.features.map(f => `<li>${esc(f)}</li>`).join('');
@@ -469,6 +510,48 @@ function renderProvider() {
   }
   updateStickyAction(hasUrl, ctaHref, billing);
   renderPricing(p.pricing_plans);
+}
+
+function activePromotion(promo) {
+  return promo && promo.enabled && (promo.title || promo.summary || promo.code);
+}
+
+function renderPromotion(promo, fallbackHref) {
+  const sec = document.getElementById('promotionSection');
+  const body = document.getElementById('promotionBody');
+  if (!activePromotion(promo)) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  const title = promo.title || '商家优惠活动';
+  const badge = promo.badge || '优惠活动';
+  const link = promo.link || fallbackHref || '#';
+  const hasLink = link && link !== '#';
+  const dateRange = [promo.starts_at, promo.ends_at].filter(Boolean).join(' 至 ');
+  body.innerHTML = `
+    <div class="promo-card">
+      <div class="promo-head">
+        <span class="promo-badge">${esc(badge)}</span>
+        <div class="promo-title">${esc(title)}</div>
+      </div>
+      ${promo.summary ? `<div class="promo-summary">${esc(promo.summary)}</div>` : ''}
+      <div class="promo-actions">
+        ${promo.code ? `<span class="promo-code" id="promoCode">${esc(promo.code)}</span><button class="copy-btn" type="button" id="copyPromoBtn">复制优惠码</button>` : ''}
+        ${hasLink ? `<a href="${esc(link)}" class="cta-btn" target="_blank" rel="noopener">${promo.code ? '去使用优惠' : '查看活动'}</a>` : ''}
+      </div>
+      ${dateRange ? `<div class="promo-meta">有效期：${esc(dateRange)}</div>` : '<div class="promo-meta">活动以商家官网展示为准。</div>'}
+    </div>
+  `;
+  const copyBtn = document.getElementById('copyPromoBtn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(promo.code || '');
+        copyBtn.textContent = '已复制';
+        setTimeout(() => { copyBtn.textContent = '复制优惠码'; }, 1600);
+      } catch {
+        copyBtn.textContent = '请手动复制';
+      }
+    });
+  }
 }
 
 function updateStickyAction(hasUrl, ctaHref, billing) {

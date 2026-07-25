@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS providers (
   avg_rating     REAL DEFAULT 0,
   review_count   INTEGER DEFAULT 0,
   pricing_plans  TEXT DEFAULT '[]',
+  promotion      TEXT DEFAULT '{}',
   site_status    TEXT DEFAULT 'unknown',
   site_checked_at TEXT DEFAULT '',
   site_status_code INTEGER DEFAULT 0,
