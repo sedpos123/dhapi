@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>商家自动同步接入指南｜中转导航</title>
+<meta name="description" content="中转导航商家自动同步接口说明。商家可通过 Codex、Claude Code 或自有脚本自动更新服务资料、优惠活动、定价套餐、用户规模和服务状态数据。" />
+<link rel="canonical" href="https://dhapi.pages.dev/merchant-automation.html" />
+<style>
+:root { --bg: oklch(97% 0.012 80); --surface: oklch(99% 0.005 80); --fg: oklch(20% 0.02 60); --muted: oklch(48% 0.015 60); --border: oklch(89% 0.012 80); --accent: oklch(58% 0.16 35); --font-display: Georgia, 'Times New Roman', serif; --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); line-height: 1.75; }
+.topnav { height: 64px; display:flex; align-items:center; justify-content:space-between; padding:0 28px; border-bottom:1px solid var(--border); background: color-mix(in oklch, var(--surface) 92%, transparent); position: sticky; top: 0; z-index: 10; }
+.brand { color: var(--fg); text-decoration:none; font-weight:700; }
+.brand span, a { color: var(--accent); }
+.nav-links { display:flex; gap:18px; font-size:14px; }
+.nav-links a { color: var(--muted); text-decoration:none; }
+.wrap { max-width: 980px; margin: 0 auto; padding: 56px 22px 80px; }
+.hero { padding: 34px; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); }
+h1 { font-family: var(--font-display); font-size: clamp(32px, 5vw, 56px); line-height: 1.08; margin: 0 0 16px; letter-spacing: -0.03em; }
+h2 { font-size: 22px; margin: 36px 0 12px; }
+p { color: var(--muted); }
+.grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:14px; margin-top:18px; }
+.card { border:1px solid var(--border); border-radius:14px; padding:18px; background: var(--surface); }
+.card b { display:block; margin-bottom:6px; }
+pre { overflow:auto; padding:18px; border-radius:14px; background:#111827; color:#f9fafb; font-family: var(--font-mono); font-size:13px; line-height:1.55; }
+code { font-family: var(--font-mono); }
+.cta-row { display:flex; flex-wrap:wrap; gap:12px; margin-top:22px; }
+.btn { display:inline-flex; align-items:center; justify-content:center; padding:10px 16px; border-radius:999px; border:1px solid var(--border); text-decoration:none; color:var(--fg); background:var(--surface); }
+.btn.primary { color:#fff; background:var(--accent); border-color:var(--accent); }
+@media (max-width: 720px) { .grid { grid-template-columns: 1fr; } .topnav { padding: 0 16px; } .nav-links { gap: 10px; } }
+</style>
+</head>
+<body>
+<nav class="topnav">
+  <a class="brand" href="index.html">中转<span>导航</span></a>
+  <div class="nav-links"><a href="index.html">首页</a><a href="merchant.html">商家入口</a><a href="sponsor.html">推广合作</a></div>
+</nav>
+<main class="wrap">
+  <section class="hero">
+    <h1>让商家资料自动保持最新</h1>
+    <p>商家认领通过后，可以生成一个自动同步令牌，然后让 Codex、Claude Code 或自己的定时任务更新中转导航上的资料。适合自动同步优惠活动、价格套餐、模型列表、用户规模和近期服务状态。</p>
+    <div class="cta-row">
+      <a class="btn primary" href="merchant.html">进入商家后台</a>
+      <a class="btn" href="/api/merchant/automation-spec">查看接口规范</a>
+    </div>
+  </section>
+
+  <div class="grid">
+    <div class="card"><b>1. 登录商家后台</b><p>先完成商家认领并通过审核。登录后调用令牌接口生成自动同步令牌。</p></div>
+    <div class="card"><b>2. 交给自动化工具</b><p>把令牌放到商家的本地环境变量中，让工具读取官网信息后按标准 JSON 更新。</p></div>
+    <div class="card"><b>3. 前台自动展示</b><p>同步成功后，详情页会展示优惠、定价、模型和商家同步数据。</p></div>
+  </div>
+
+  <h2>给 Codex / Claude Code 的提示词</h2>
+  <pre>你是某 AI API 服务商的运营资料维护助手。
+请读取商家官网中公开展示的服务资料、优惠活动、模型覆盖、价格套餐和运营数据。
+只同步能确认的信息，不确定的字段留空。
+向 https://dhapi.pages.dev/api/merchant/sync/provider 发送 PATCH 请求。
+请求头使用：Authorization: Bearer $DHAPI_MERCHANT_TOKEN
+请求体按 /api/merchant/automation-spec 返回的 JSON 结构组织。</pre>
+
+  <h2>同步请求示例</h2>
+  <pre>curl -X PATCH "https://dhapi.pages.dev/api/merchant/sync/provider" \
+  -H "Authorization: Bearer $DHAPI_MERCHANT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "profile": {
+      "name": "Example API",
+      "url": "https://example.com",
+      "brands": ["OpenAI", "Claude", "Gemini"],
+      "supported_models": ["gpt-4.1", "claude-3.5-sonnet"],
+      "features": ["按量计费", "支持多模型"],
+      "billing_type": "pay_as_you_go"
+    },
+    "promotion": {
+      "enabled": true,
+      "badge": "限时优惠",
+      "title": "新用户充值加赠",
+      "summary": "新用户首充可获得额外额度，活动以官网为准。",
+      "code": "DHAPI20",
+      "link": "https://example.com/promo"
+    },
+    "metrics": {
+      "user_count": 12000,
+      "request_count_24h": 800000,
+      "success_rate_24h": 99.2,
+      "avg_latency_ms": 1200,
+      "model_count": 28,
+      "note": "由商家自动同步"
+    }
+  }'</pre>
+
+  <h2>建议同步频率</h2>
+  <p>优惠活动和价格建议每天同步一次；模型列表有变更时即时同步；用户数、请求量、近期状态等运营数据建议每 6-24 小时同步一次。这样用户在选择服务商时能看到更完整、更可信的信息。</p>
+</main>
+</body>
+</html>

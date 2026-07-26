@@ -90,6 +90,48 @@ async function run() {
     const reviews = await jsonRequest('/api/reviews/api2d');
     assert(reviews.response.status === 200 && Array.isArray(reviews.body.reviews), 'reviews list failed');
 
+    const merchantRegister = await jsonRequest('/api/merchant/register', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'merchant-smoke@example.com', password: 'merchant-pass-123', provider_id: 'api2d' })
+    });
+    assert(merchantRegister.response.status === 200, 'merchant register failed');
+
+    const merchantList = await jsonRequest('/api/admin/merchants', {
+      headers: { Authorization: `Bearer ${login.body.token}` }
+    });
+    const merchant = merchantList.body.merchants.find(m => m.email === 'merchant-smoke@example.com');
+    assert(merchant && merchant.id, 'merchant list missing registered merchant');
+
+    const merchantApprove = await jsonRequest(`/api/admin/merchants/${merchant.id}/approve`, {
+      method: 'POST', headers: { Authorization: `Bearer ${login.body.token}` }
+    });
+    assert(merchantApprove.response.status === 200, 'merchant approve failed');
+
+    const merchantLogin = await jsonRequest('/api/merchant/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'merchant-smoke@example.com', password: 'merchant-pass-123' })
+    });
+    assert(merchantLogin.response.status === 200 && merchantLogin.body.token, 'merchant login failed');
+
+    const automationToken = await jsonRequest('/api/merchant/automation/token', {
+      method: 'POST', headers: { Authorization: `Bearer ${merchantLogin.body.token}` }
+    });
+    assert(automationToken.response.status === 200 && automationToken.body.token?.startsWith('dhapi_live_'), 'merchant automation token failed');
+
+    const sync = await jsonRequest('/api/merchant/sync/provider', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${automationToken.body.token}` },
+      body: JSON.stringify({
+        promotion: { enabled: true, title: 'Smoke promo', summary: 'Smoke summary', code: 'SMOKE' },
+        metrics: { user_count: 12345, request_count_24h: 67890, success_rate_24h: 99.1, model_count: 12, note: 'Smoke sync' },
+        monitoring: [{ family: 'OpenAI', availability: 99, latency_recent: 1.2, sample_count: 10 }]
+      })
+    });
+    assert(sync.response.status === 200 && sync.body.updated_fields.includes('merchant_metrics'), 'merchant sync failed');
+
+    const syncedProvider = await jsonRequest('/api/providers/api2d');
+    assert(syncedProvider.body.provider.merchant_metrics.user_count === 12345, 'merchant metrics were not exposed');
+
     const exported = await jsonRequest('/api/admin/export', {
       headers: { Authorization: `Bearer ${login.body.token}` }
     });

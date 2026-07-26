@@ -25,6 +25,8 @@ CREATE TABLE IF NOT EXISTS providers (
   review_count   INTEGER DEFAULT 0,
   pricing_plans  TEXT DEFAULT '[]',
   promotion      TEXT DEFAULT '{}',
+  merchant_metrics TEXT DEFAULT '{}',
+  merchant_metrics_updated_at TEXT DEFAULT '',
   site_status    TEXT DEFAULT 'unknown',
   site_checked_at TEXT DEFAULT '',
   site_status_code INTEGER DEFAULT 0,
@@ -89,6 +91,10 @@ CREATE TABLE IF NOT EXISTS merchants (
   salt          TEXT NOT NULL,
   provider_id   TEXT NOT NULL,
   status        TEXT DEFAULT 'pending',
+  api_token_hash TEXT DEFAULT '',
+  api_token_prefix TEXT DEFAULT '',
+  api_token_created_at TEXT DEFAULT '',
+  last_sync_at   TEXT DEFAULT '',
   created_at    TEXT DEFAULT (datetime('now','localtime')),
   updated_at    TEXT DEFAULT (datetime('now','localtime'))
 );

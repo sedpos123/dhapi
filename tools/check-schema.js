@@ -7,10 +7,10 @@ const schema = fs.readFileSync(path.join(__dirname, '..', 'schema.sql'), 'utf8')
 db.exec(schema);
 
 const requiredColumns = {
-  providers: ['id', 'name', 'logo_url', 'supported_models', 'avg_rating', 'review_count', 'sort_order', 'pricing_plans', 'promotion', 'site_status', 'site_checked_at', 'site_status_code', 'site_latency_ms', 'site_error', 'site_error_days'],
+  providers: ['id', 'name', 'logo_url', 'supported_models', 'avg_rating', 'review_count', 'sort_order', 'pricing_plans', 'promotion', 'merchant_metrics', 'merchant_metrics_updated_at', 'site_status', 'site_checked_at', 'site_status_code', 'site_latency_ms', 'site_error', 'site_error_days'],
   pending_submissions: ['id', 'name', 'logo_url', 'supported_models', 'status'],
   reviews: ['id', 'provider_id', 'score', 'status', 'merchant_reply'],
-  merchants: ['id', 'email', 'password_hash', 'provider_id', 'status'],
+  merchants: ['id', 'email', 'password_hash', 'provider_id', 'status', 'api_token_hash', 'api_token_prefix', 'api_token_created_at', 'last_sync_at'],
   sponsor_leads: ['id', 'provider_name', 'contact_email', 'contact_wechat', 'package_code', 'status']
 };
 

@@ -92,3 +92,34 @@ export async function verifyPassword(password, salt, expectedHash) {
   const hash = await hashPassword(password, salt);
   return hash === expectedHash;
 }
+
+export function randomToken(prefix = 'dhapi_live_') {
+  const arr = new Uint8Array(32);
+  crypto.getRandomValues(arr);
+  const raw = btoa(String.fromCharCode(...arr)).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+  return prefix + raw;
+}
+
+export async function sha256Hex(value) {
+  const enc = new TextEncoder();
+  const digest = await crypto.subtle.digest('SHA-256', enc.encode(value));
+  return bufToHex(digest);
+}
+
+export async function merchantApiTokenMiddleware(c, next) {
+  const authHeader = c.req.header('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return c.json({ error: 'Missing merchant API token' }, 401);
+  }
+  const token = authHeader.slice('Bearer '.length).trim();
+  if (!token.startsWith('dhapi_live_') || token.length < 40) {
+    return c.json({ error: 'Invalid merchant API token' }, 401);
+  }
+  const tokenHash = await sha256Hex(token);
+  const merchant = await c.env.DB.prepare(
+    "SELECT id, provider_id, status FROM merchants WHERE api_token_hash = ? AND status = 'approved'"
+  ).bind(tokenHash).first();
+  if (!merchant) return c.json({ error: 'Invalid merchant API token' }, 401);
+  c.set('merchant', { role: 'merchant_api', merchant_id: merchant.id, provider_id: merchant.provider_id });
+  await next();
+}

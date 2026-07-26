@@ -325,6 +325,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
       <div class="section-title">关键数据</div>
       <div class="stats-grid" id="statsGrid"></div>
     </div>
+    <div class="section" id="merchantMetricsSection" style="display:none;">
+      <div class="section-title">商家同步数据</div>
+      <div class="info-grid" id="merchantMetricsBody"></div>
+    </div>
     <div class="section" id="promotionSection" style="display:none;">
       <div class="section-title">商家优惠活动</div>
       <div id="promotionBody"></div>
@@ -510,6 +514,7 @@ function renderProvider() {
   renderSiteStatus();
   document.getElementById('modelTags').innerHTML = models.map(m => `<span class="tag">${esc(m)}</span>`).join('');
   renderPromotion(p.promotion, hasUrl ? ctaHref : '');
+  renderMerchantMetrics(p.merchant_metrics, p.merchant_metrics_updated_at);
   if (p.features && p.features.length) {
     document.getElementById('featureSection').style.display = 'block';
     document.getElementById('featureList').innerHTML = p.features.map(f => `<li>${esc(f)}</li>`).join('');
@@ -524,6 +529,33 @@ function renderProvider() {
 
 function activePromotion(promo) {
   return promo && promo.enabled && (promo.title || promo.summary || promo.code);
+}
+
+function compactMetricNumber(value) {
+  const n = Number(value || 0);
+  if (!Number.isFinite(n) || n <= 0) return '';
+  if (n >= 100000000) return (n / 100000000).toFixed(n >= 1000000000 ? 1 : 2).replace(/\.0+$/, '') + '亿';
+  if (n >= 10000) return (n / 10000).toFixed(n >= 100000 ? 1 : 2).replace(/\.0+$/, '') + '万';
+  return String(Math.floor(n));
+}
+
+function renderMerchantMetrics(metrics, updatedAt) {
+  const sec = document.getElementById('merchantMetricsSection');
+  const body = document.getElementById('merchantMetricsBody');
+  const m = metrics || {};
+  const rows = [
+    { label: '用户数', value: compactMetricNumber(m.user_count) },
+    { label: '付费用户', value: compactMetricNumber(m.paid_user_count) },
+    { label: '24小时请求量', value: compactMetricNumber(m.request_count_24h) },
+    { label: '24小时成功率', value: m.success_rate_24h ? m.success_rate_24h + '%' : '' },
+    { label: '平均响应', value: m.avg_latency_ms ? m.avg_latency_ms + 'ms' : '' },
+    { label: '模型数量', value: m.model_count ? String(m.model_count) : '' }
+  ].filter(item => item.value);
+  if (!rows.length && !m.note) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  body.innerHTML = rows.map(item => `<div class="info-item"><span class="label">${esc(item.label)}</span><span class="value">${esc(item.value)}</span></div>`).join('')
+    + (m.note ? `<div class="info-item" style="grid-column:1/-1;"><span class="label">商家说明</span><span class="value">${esc(m.note)}</span></div>` : '')
+    + `<div class="info-item" style="grid-column:1/-1;"><span class="label">更新时间</span><span class="value">${esc(updatedAt || m.updated_at || '由商家自动同步')}</span></div>`;
 }
 
 function renderPromotion(promo, fallbackHref) {

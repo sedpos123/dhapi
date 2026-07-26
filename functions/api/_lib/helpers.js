@@ -24,7 +24,9 @@ export function parseProvider(row) {
     site_status_code: row.site_status_code || 0,
     site_latency_ms: row.site_latency_ms || 0,
     site_error: row.site_error || '',
-    site_error_days: row.site_error_days || 0
+    site_error_days: row.site_error_days || 0,
+    merchant_metrics: JSON.parse(row.merchant_metrics || '{}'),
+    merchant_metrics_updated_at: row.merchant_metrics_updated_at || ''
   };
 }
 
@@ -94,6 +96,27 @@ export function cleanPromotion(value) {
 
 export function hasActivePromotion(promotion) {
   return !!(promotion && promotion.enabled && (promotion.title || promotion.summary || promotion.code));
+}
+
+export function cleanMerchantMetrics(value) {
+  if (!value || typeof value !== 'object') return {};
+  return {
+    user_count: Math.max(0, Math.min(1000000000, Math.floor(numOr(value.user_count, 0)))),
+    paid_user_count: Math.max(0, Math.min(1000000000, Math.floor(numOr(value.paid_user_count, 0)))),
+    request_count_24h: Math.max(0, Math.min(1000000000000, Math.floor(numOr(value.request_count_24h, 0)))),
+    success_rate_24h: Math.max(0, Math.min(100, numOr(value.success_rate_24h, 0))),
+    avg_latency_ms: Math.max(0, Math.min(600000, Math.floor(numOr(value.avg_latency_ms, 0)))),
+    model_count: Math.max(0, Math.min(10000, Math.floor(numOr(value.model_count, 0)))),
+    note: cleanText(value.note, 240),
+    updated_at: cleanText(value.updated_at, 40)
+  };
+}
+
+export function hasMerchantMetrics(metrics) {
+  return !!(metrics && (
+    metrics.user_count || metrics.paid_user_count || metrics.request_count_24h ||
+    metrics.success_rate_24h || metrics.avg_latency_ms || metrics.model_count || metrics.note
+  ));
 }
 
 export function isHttpUrl(value) {
